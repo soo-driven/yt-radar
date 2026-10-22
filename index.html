@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>터진영상 레이더</title>
+<style>
+:root{
+  --bg:#f6f6f4; --panel:#ffffff; --panel2:#f0efec; --line:#e2e0db; --text:#1d1d1b; --sub:#6b6a66;
+  --accent:#e5484d; --accent-weak:#fde8e8; --link:#2563eb;
+  --t1:#9a9893; --t2:#3b82f6; --t3:#16a34a; --t4:#d97706; --t5:#dc2626; --t6:#9333ea;
+  --shadow:0 1px 2px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111111; --panel:#1b1b1b; --panel2:#242424; --line:#2f2f2f; --text:#ededed; --sub:#9b9b9b;
+    --accent:#ff5a5f; --accent-weak:#3a1d1e; --link:#7aa7ff;
+    --t1:#8a8a8a; --t2:#60a5fa; --t3:#4ade80; --t4:#fbbf24; --t5:#f87171; --t6:#c084fc;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111111; --panel:#1b1b1b; --panel2:#242424; --line:#2f2f2f; --text:#ededed; --sub:#9b9b9b;
+  --accent:#ff5a5f; --accent-weak:#3a1d1e; --link:#7aa7ff;
+  --t1:#8a8a8a; --t2:#60a5fa; --t3:#4ade80; --t4:#fbbf24; --t5:#f87171; --t6:#c084fc;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+a{color:var(--link);text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px}
+.logo i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tab{border:0;background:transparent;padding:7px 12px;border-radius:8px;cursor:pointer;color:var(--sub);font-weight:600}
+.tab.on{background:var(--panel2);color:var(--text)}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--sub)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--sub)}
+.field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:90px}
+.status{font-size:12px;color:var(--sub);margin-top:10px;min-height:18px}
+.status.err{color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.chip b{font-weight:700;margin-left:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.thumb{position:relative;aspect-ratio:16/9;background:var(--panel2);display:block}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .dur{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:1px 5px;border-radius:4px}
+.thumb .new{position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px}
+.cbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.ctitle{font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cmeta{font-size:12px;color:var(--sub)}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto}
+.score{font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.s1{color:var(--t1)}.s2{color:var(--t2)}.s3{color:var(--t3)}.s4{color:var(--t4)}.s5{color:var(--t5)}.s6{color:var(--t6)}
+.linkbtn{border:0;background:none;color:var(--link);cursor:pointer;padding:0;font-size:12px}
+.empty{padding:40px 16px;text-align:center;color:var(--sub)}
+.two{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+@media(min-width:900px){.two{grid-template-columns:repeat(3,1fr)}}
+.sum h3{margin:0 0 4px;font-size:12px;color:var(--sub);font-weight:600}
+.sum .big{font-size:15px;font-weight:700;line-height:1.35}
+.sum .why{font-size:12px;color:var(--sub);margin-top:6px}
+.sum .mini{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
+.sum .mini img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex:none;background:var(--panel2)}
+.chartwrap{margin-top:14px;position:relative}
+.chartwrap svg{width:100%;height:auto;display:block}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:var(--bg);font-size:12px;padding:6px 8px;border-radius:6px;max-width:280px;display:none;z-index:3}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--sub);font-weight:600}
+td.num,th.num{text-align:right;white-space:nowrap}
+.tablewrap{overflow-x:auto;margin-top:14px}
+.kw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.kw span{background:var(--accent-weak);color:var(--text);border-radius:6px;padding:2px 8px;font-size:12px}
+.kw span em{font-style:normal;color:var(--sub);margin-left:4px}
+.note{font-size:12px;color:var(--sub);margin-top:10px}
+h2{font-size:16px;margin:18px 0 6px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);max-width:640px;width:calc(100% - 32px);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea,dialog input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px}
+dialog textarea{min-height:220px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.chead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.cadd{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cadd input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+#cInput{flex:1 1 260px;min-width:0}
+#cTag{flex:0 1 170px;min-width:0}
+.cmsg{font-size:12px;color:var(--sub);min-height:18px;margin-top:6px}
+.clist{display:flex;gap:6px;flex-wrap:wrap;max-height:180px;overflow-y:auto}
+.cchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:3px 4px 3px 4px;font-size:12px;max-width:100%}
+.cchip img{width:18px;height:18px;border-radius:50%}
+.cchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;padding-left:4px}
+.cchip em{font-style:normal;color:var(--sub)}
+.cchip button{border:0;background:transparent;color:var(--sub);cursor:pointer;width:20px;height:20px;border-radius:50%;line-height:1;font-size:14px}
+.cchip button:hover{background:var(--line);color:var(--text)}
+.cchip.bad{border-color:var(--accent);color:var(--accent)}
+.progress{height:3px;background:var(--panel2);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
+.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo"><i></i>터진영상 레이더</div>
+    <nav class="tabs">
+      <button class="tab on" data-tab="board">터진 영상 보드</button>
+      <button class="tab" data-tab="boost">첫 부스트 찾기</button>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn" id="btnTheme" title="밝게/어둡게">◐</button>
+    <button class="btn" id="btnSettings">⚙️ 설정</button>
+  </div>
+</header>
+
+<main>
+  <!-- 탭 1: 터진 영상 보드 -->
+  <section id="tab-board">
+    <div class="panel cpanel">
+      <div class="chead">
+        <b>감시 채널 <span id="cCount">0</span>개</b>
+        <span class="cmeta">핸들(@jocoding)이나 채널 주소를 붙여 넣으세요. 쉼표나 줄바꿈으로 여러 개를 한 번에 넣을 수 있어요.</span>
+        <div class="spacer"></div>
+        <button class="linkbtn" id="cToggle">접기</button>
+      </div>
+      <div id="cBody">
+        <form class="cadd" id="cForm">
+          <input id="cInput" placeholder="@핸들 또는 youtube.com/@핸들" autocomplete="off" aria-label="추가할 채널">
+          <input id="cTag" list="cTags" placeholder="그룹 (선택, 예: AI)" autocomplete="off" aria-label="그룹">
+          <datalist id="cTags"></datalist>
+          <button class="btn primary" type="submit">+ 추가</button>
+        </form>
+        <div class="cmsg" id="cMsg"></div>
+        <div class="clist" id="cList"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <div class="controls">
+        <div class="field">기간
+          <select id="bPeriod"><option value="7">최근 7일</option><option value="30" selected>최근 30일</option><option value="90">최근 90일</option><option value="365">최근 1년</option></select>
+        </div>
+        <div class="field">종류
+          <select id="bType"><option value="all">전체</option><option value="long" selected>롱폼</option><option value="short">쇼츠</option></select>
+        </div>
+        <div class="field">최소 점수
+          <select id="bMin"><option value="1.3">1.3x+</option><option value="2">2x+</option><option value="3" selected>3x+</option><option value="5">5x+</option><option value="10">10x+</option></select>
+        </div>
+        <div class="field">정렬
+          <select id="bSort"><option value="score">점수 높은 순</option><option value="recent">최신 순</option><option value="views">조회수 순</option><option value="vph">시간당 조회 순</option></select>
+        </div>
+        <div class="field">기준선
+          <select id="bBase"><option value="mean" selected>직전 10개 평균 (viewstats 방식)</option><option value="median">직전 10개 중앙값 (튀는 값에 강함)</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn" id="btnCsv">CSV 내보내기</button>
+        <button class="btn primary" id="btnRefresh">새로고침</button>
+      </div>
+      <div class="progress" id="bProg"><i></i></div>
+      <div class="status" id="bStatus"></div>
+    </div>
+    <div class="chips" id="bChips"></div>
+    <div class="grid" id="bGrid"></div>
+    <p class="note">점수 = 영상 조회수 ÷ 같은 채널·같은 종류(롱폼/쇼츠)의 직전 업로드 10개 조회수. 쇼츠는 길이 3분 이하로 추정해요. 조회수는 지금 누적 값이라, 올라온 지 3일이 안 된 영상은 점수가 낮게 나올 수 있어요.</p>
+  </section>
+
+  <!-- 탭 2: 첫 부스트 찾기 -->
+  <section id="tab-boost" hidden>
+    <div class="panel">
+      <div class="controls">
+        <div class="field">채널
+          <select id="fChannel"></select>
+        </div>
+        <div class="field">또는 핸들 직접 입력
+          <input id="fHandle" placeholder="@channel">
+        </div>
+        <div class="field">종류
+          <select id="fType"><option value="long" selected>롱폼</option><option value="short">쇼츠</option><option value="all">전체</option></select>
+        </div>
+        <div class="field">터짐 기준
+          <select id="fThr"><option value="3">3x+</option><option value="5" selected>5x+</option><option value="10">10x+</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn primary" id="btnAnalyze">전체 기록 분석</button>
+      </div>
+      <div class="progress" id="fProg"><i></i></div>
+      <div class="status" id="fStatus"></div>
+    </div>
+    <div id="fResult"></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <h3 style="margin:0">설정</h3>
+  <label for="sKey">개인 YouTube Data API 키 (선택 · 이 브라우저에만 저장돼요. 비워 두면 팀 공용 키를 써요)</label>
+  <input id="sKey" type="password" placeholder="AIza..." autocomplete="off">
+  <div class="row">
+    <button class="btn" id="sCancel">닫기</button>
+    <button class="btn primary" id="sSave">저장</button>
+  </div>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- 저장소 (브라우저에 없거나 막혀 있어도 동작) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+
+// 감시판 v1 「채널목록」 25개
+const DEFAULT_CHANNELS = `@digital_turtle
+@younsojung
+@drawandrew
+@MKTV
+@김창옥TV
+@omd_eunhwan
+@Sound.Sound_Daniel
+@jachung__
+@choiceuniverse
+@outlier_sungwon
+@horangwave
+@DanKoeTalks
+@AI-SSAP
+@공여사들
+@builderjoshkim
+@Oppadu
+@syukaworld
+@jocoding
+@jtinfo5
+@ImanGadzhi
+@주언규PD
+@joohankim
+@jangpm
+@감자나라ai
+@kimgryun`;
+
+// 팀 공용 키: 웹 게시 주소에서만 작동하도록 Google Cloud에서 제한한 키만 넣는다. 개인 키는 ⚙️ 설정에 넣으면 이 값보다 우선한다
+const TEAM_KEY = '';
+const apiKey = () => store.get('ytKey', '') || TEAM_KEY;
+
+const CACHE_HOURS = 6;
+const SHORT_MAX_SEC = 180;
+const BASE_N = 10;
+
+const $ = s => document.querySelector(s);
+const state = { channels: {}, board: [], failed: {} };
+
+// ---------- 유틸 ----------
+const fmt = n => n >= 1e8 ? (n / 1e8).toFixed(1) + '억' : n >= 1e4 ? (n / 1e4).toFixed(n >= 1e5 ? 0 : 1) + '만' : n >= 1e3 ? (n / 1e3).toFixed(1) + '천' : String(n);
+const fmtScore = s => s >= 10 ? s.toFixed(0) : s.toFixed(1);
+const tier = s => s < 2 ? 1 : s < 5 ? 2 : s < 10 ? 3 : s < 25 ? 4 : s < 50 ? 5 : 6; // viewstats 색 구간과 같음
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hoursSince = iso => Math.max(1, (Date.now() - new Date(iso).getTime()) / 36e5);
+const ago = iso => { const h = hoursSince(iso); return h < 24 ? Math.round(h) + '시간 전' : h < 24 * 30 ? Math.round(h / 24) + '일 전' : h < 24 * 365 ? Math.round(h / 720) + '개월 전' : (h / 8760).toFixed(1) + '년 전'; };
+const ymd = iso => iso.slice(0, 10).replace(/-/g, '.');
+const durSec = iso => { const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso || '') || []; return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0); };
+const durTxt = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+const thumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+
+function parseChannels() {
+  const txt = store.get('channels', DEFAULT_CHANNELS);
+  return txt.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const tags = (l.match(/#[^\s#]+/g) || []).map(t => t.slice(1));
+    const handle = l.replace(/#[^\s#]+/g, '').trim();
+    return { handle: handle.startsWith('@') ? handle : '@' + handle, tags };
+  });
+}
+
+function saveChannels(list) {
+  store.set('channels', list.map(c => [c.handle, ...c.tags.map(t => '#' + t)].join(' ')).join('\n'));
+}
+
+// "@x", "x", "https://www.youtube.com/@x/videos" 모두 받는다
+function normHandle(s) {
+  s = s.trim();
+  const m = s.match(/youtube\.com\/(@[^/?#\s]+)/i);
+  if (m) s = decodeURIComponent(m[1]);
+  if (!s || /^https?:/i.test(s)) return '';
+  return s.startsWith('@') ? s : '@' + s;
+}
+
+// ---------- YouTube API ----------
+async function yt(path, params) {
+  const key = apiKey();
+  if (!key) throw new Error('NO_KEY');
+  const q = new URLSearchParams({ ...params, key });
+  const r = await fetch(`https://www.googleapis.com/youtube/v3/${path}?${q}`);
+  const j = await r.json();
+  if (j.error) {
+    const reason = j.error.errors?.[0]?.reason || '';
+    throw new Error(reason === 'quotaExceeded' ? '오늘 API 할당량(1만 단위)을 다 썼어요. 내일 다시 시도해 주세요.' : `YouTube API 오류: ${j.error.message}`);
+  }
+  return j;
+}
+
+async function getChannel(handle) {
+  const j = await yt('channels', { part: 'snippet,statistics,contentDetails', forHandle: handle });
+  const c = j.items?.[0];
+  if (!c) throw new Error(`${handle} 채널을 찾지 못했어요`);
+  return {
+    id: c.id, handle, title: c.snippet.title,
+    avatar: c.snippet.thumbnails?.default?.url || '',
+    subs: +c.statistics.subscriberCount || 0, videoCount: +c.statistics.videoCount || 0,
+    uploads: c.contentDetails.relatedPlaylists.uploads,
+  };
+}
+
+// 업로드 목록 → 영상 상세. maxVideos=Infinity면 전체 기록
+async function getUploads(ch, maxVideos, onProgress) {
+  const ids = [];
+  let token = '';
+  do {
+    const j = await yt('playlistItems', { part: 'contentDetails', playlistId: ch.uploads, maxResults: 50, ...(token && { pageToken: token }) });
+    j.items.forEach(it => ids.push(it.contentDetails.videoId));
+    token = j.nextPageToken || '';
+    onProgress?.(ids.length, ch.videoCount, '목록');
+  } while (token && ids.length < maxVideos);
+  const out = [];
+  for (let i = 0; i < ids.length && i < maxVideos; i += 50) {
+    const j = await yt('videos', { part: 'snippet,statistics,contentDetails', id: ids.slice(i, i + 50).join(',') });
+    j.items.forEach(v => {
+      const d = durSec(v.contentDetails.duration);
+      out.push({ id: v.id, t: v.snippet.title, p: v.snippet.publishedAt, v: +v.statistics.viewCount || 0, d, s: d > 0 && d <= SHORT_MAX_SEC, live: v.snippet.liveBroadcastContent !== 'none' });
+    });
+    onProgress?.(out.length, Math.min(ids.length, maxVideos), '상세');
+  }
+  return out.filter(v => !v.live).sort((a, b) => a.p < b.p ? -1 : 1); // 오래된 → 최신
+}
+
+// 같은 종류의 직전 N개 대비 점수
+function scoreVideos(videos, baseMode) {
+  const agg = baseMode === 'median' ? median : mean;
+  const byType = { long: [], short: [] };
+  for (const v of videos) {
+    const prev = byType[v.s ? 'short' : 'long'];
+    const window = prev.slice(-BASE_N).map(x => x.v);
+    v.base = window.length >= 3 ? agg(window) : 0;
+    v.score = v.base > 0 ? v.v / v.base : NaN;
+    v.n = window.length;
+    prev.push(v);
+  }
+  return videos;
+}
+
+async function pool(items, n, fn) {
+  const q = [...items]; const workers = Array.from({ length: n }, async () => { while (q.length) await fn(q.shift()); });
+  await Promise.all(workers);
+}
+
+// ---------- 탭 1: 터진 영상 보드 ----------
+let activeChip = '';
+
+async function refreshBoard(force) {
+  const list = parseChannels();
+  const status = $('#bStatus'), prog = $('#bProg');
+  status.className = 'status';
+  if (!apiKey()) { status.className = 'status err'; status.textContent = '⚙️ 설정에서 YouTube API 키를 먼저 넣어 주세요.'; renderBoard(); return; }
+  $('#btnRefresh').disabled = true; prog.style.display = 'block';
+  let done = 0;
+  const cache = store.get('boardCache', {});
+  await pool(list, 4, async ({ handle, tags }) => {
+    await loadChannel(handle, tags, force, cache);
+    done++;
+    prog.firstElementChild.style.width = (done / list.length * 100) + '%';
+    status.textContent = `채널 불러오는 중… ${done}/${list.length}`;
+  }).catch(e => { status.className = 'status err'; status.textContent = e.message; });
+  if (!store.set('boardCache', cache)) console.warn('캐시 저장 실패(저장 공간 부족)');
+  prog.style.display = 'none'; $('#btnRefresh').disabled = false;
+  const fails = list.filter(c => state.failed[c.handle]).map(c => `${c.handle} (${state.failed[c.handle]})`);
+  const okCount = list.length - fails.length;
+  renderChannelPanel();
+  status.className = fails.length ? 'status err' : 'status';
+  status.textContent = `${okCount}개 채널 불러옴 · ${new Date().toLocaleString('ko-KR')}` + (fails.length ? ` · 실패: ${fails.join(', ')}` : '');
+  renderBoard();
+}
+
+async function loadChannel(handle, tags, force, cache) {
+  try {
+    const c = cache[handle];
+    if (!force && c && Date.now() - c.at < CACHE_HOURS * 36e5) state.channels[handle] = { ...c, tags };
+    else {
+      const ch = await getChannel(handle);
+      const videos = await getUploads(ch, 100);
+      cache[handle] = { ...ch, videos, at: Date.now() };
+      state.channels[handle] = { ...cache[handle], tags };
+    }
+    delete state.failed[handle];
+  } catch (e) {
+    if (e.message === 'NO_KEY') throw e;
+    state.failed[handle] = e.message;
+  }
+}
+
+// ---------- 감시 채널 패널 ----------
+function renderChannelPanel() {
+  const list = parseChannels();
+  $('#cCount').textContent = list.length;
+  $('#cList').innerHTML = list.map(c => {
+    const ch = state.channels[c.handle], bad = state.failed[c.handle];
+    return `<span class="cchip${bad ? ' bad' : ''}" title="${esc(bad ? c.handle + ' · ' + bad : c.handle)}">
+      ${ch?.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : ''}<span>${esc(ch?.title || c.handle)}</span>${c.tags.map(t => `<em>#${esc(t)}</em>`).join('')}
+      <button type="button" data-del="${esc(c.handle)}" aria-label="${esc(c.handle)} 빼기">×</button></span>`;
+  }).join('') || '<span class="cmeta">아직 감시 채널이 없어요. 위에 핸들을 넣어 추가해 주세요.</span>';
+  $('#cTags').innerHTML = [...new Set(list.flatMap(c => c.tags))].map(t => `<option value="${esc(t)}">`).join('');
+}
+
+async function addChannels(e) {
+  e.preventDefault();
+  const handles = $('#cInput').value.split(/[\s,]+/).map(normHandle).filter(Boolean);
+  const tag = $('#cTag').value.trim().replace(/^#/, '').replace(/\s+/g, '');
+  const msg = $('#cMsg');
+  if (!handles.length) { msg.textContent = '채널 핸들(@로 시작)이나 youtube.com/@핸들 주소를 넣어 주세요.'; return; }
+  const list = parseChannels(), added = [];
+  for (const h of handles) {
+    if (list.some(c => c.handle.toLowerCase() === h.toLowerCase()) || added.includes(h)) continue;
+    list.push({ handle: h, tags: tag ? [tag] : [] }); added.push(h);
+  }
+  if (!added.length) { msg.textContent = '이미 감시 중인 채널이에요.'; return; }
+  saveChannels(list);
+  $('#cInput').value = '';
+  renderChannelPanel();
+  if (!apiKey()) { msg.textContent = `${added.length}개 추가했어요. ⚙️ 설정에 API 키를 넣으면 불러와요.`; return; }
+  msg.textContent = `${added.join(', ')} 불러오는 중…`;
+  const cache = store.get('boardCache', {});
+  try {
+    for (const h of added) await loadChannel(h, tag ? [tag] : [], true, cache);
+  } catch (err) { msg.textContent = err.message === 'NO_KEY' ? '⚙️ 설정에 API 키를 넣어 주세요.' : err.message; return; }
+  store.set('boardCache', cache);
+  msg.textContent = added.map(h => state.failed[h] ? `⚠️ ${h}: ${state.failed[h]}` : `✓ ${state.channels[h].title} 추가됨`).join(' · ');
+  syncBoardStatus(); renderChannelPanel(); renderBoard();
+}
+
+function syncBoardStatus() {
+  const fails = parseChannels().filter(c => state.failed[c.handle]).map(c => `${c.handle} (${state.failed[c.handle]})`);
+  $('#bStatus').className = fails.length ? 'status err' : 'status';
+  $('#bStatus').textContent = `${Object.keys(state.channels).length}개 채널 불러옴` + (fails.length ? ` · 실패: ${fails.join(', ')}` : '');
+}
+
+function removeChannel(handle) {
+  saveChannels(parseChannels().filter(c => c.handle !== handle));
+  delete state.channels[handle]; delete state.failed[handle];
+  const cache = store.get('boardCache', {}); delete cache[handle]; store.set('boardCache', cache);
+  if (activeChip === handle) activeChip = '';
+  $('#cMsg').textContent = `${handle} 뺐어요.`;
+  if (Object.keys(state.channels).length) syncBoardStatus();
+  renderChannelPanel(); renderBoard();
+}
+
+function boardRows() {
+  const days = +$('#bPeriod').value, type = $('#bType').value, min = +$('#bMin').value, base = $('#bBase').value;
+  const cutoff = Date.now() - days * 864e5;
+  const seen = store.get('seen', {}); const today = new Date().toISOString().slice(0, 10);
+  const rows = [];
+  for (const ch of Object.values(state.channels)) {
+    if (activeChip && !(ch.tags || []).includes(activeChip) && ch.handle !== activeChip) continue;
+    const scored = scoreVideos(ch.videos.map(v => ({ ...v })), base);
+    for (const v of scored) {
+      if (new Date(v.p).getTime() < cutoff) continue;
+      if (type === 'long' && v.s) continue;
+      if (type === 'short' && !v.s) continue;
+      if (!(v.score >= min)) continue;
+      if (!seen[v.id]) seen[v.id] = today;
+      rows.push({ ...v, ch, vph: v.v / hoursSince(v.p), isNew: seen[v.id] === today });
+    }
+  }
+  store.set('seen', seen);
+  const key = $('#bSort').value;
+  rows.sort((a, b) => key === 'recent' ? (a.p < b.p ? 1 : -1) : key === 'views' ? b.v - a.v : key === 'vph' ? b.vph - a.vph : b.score - a.score);
+  return rows;
+}
+
+function renderChips(rows) {
+  const counts = {};
+  for (const ch of Object.values(state.channels)) for (const t of ch.tags || []) counts['#' + t] = 0;
+  const tagNames = Object.keys(counts);
+  const html = [`<button class="chip ${activeChip ? '' : 'on'}" data-chip="">전체</button>`];
+  for (const t of tagNames) html.push(`<button class="chip ${activeChip === t.slice(1) ? 'on' : ''}" data-chip="${esc(t.slice(1))}">${esc(t)}</button>`);
+  const perCh = {};
+  rows.forEach(r => perCh[r.ch.handle] = (perCh[r.ch.handle] || 0) + 1);
+  Object.entries(perCh).sort((a, b) => b[1] - a[1]).forEach(([h, n]) => {
+    const ch = state.channels[h];
+    html.push(`<button class="chip ${activeChip === h ? 'on' : ''}" data-chip="${esc(h)}">${esc(ch.title)}<b>${n}</b></button>`);
+  });
+  $('#bChips').innerHTML = html.join('');
+}
+
+function renderBoard() {
+  const rows = boardRows();
+  state.board = rows;
+  renderChips(rows);
+  const grid = $('#bGrid');
+  if (!Object.keys(state.channels).length) { grid.innerHTML = '<div class="empty">아직 불러온 데이터가 없어요. API 키를 넣고 <b>새로고침</b>을 눌러 주세요.</div>'; return; }
+  if (!rows.length) { grid.innerHTML = '<div class="empty">조건에 맞는 터진 영상이 없어요. 기간을 늘리거나 최소 점수를 낮춰 보세요.</div>'; return; }
+  grid.innerHTML = rows.map(r => `
+    <article class="card">
+      <a class="thumb" href="https://www.youtube.com/watch?v=${r.id}" target="_blank" rel="noopener">
+        <img loading="lazy" src="${thumb(r.id)}" alt="">
+        ${r.isNew ? '<span class="new">NEW</span>' : ''}
+        <span class="dur">${r.s ? '쇼츠 ' : ''}${durTxt(r.d)}</span>
+      </a>
+      <div class="cbody">
+        <div class="ctitle" title="${esc(r.t)}">${esc(r.t)}</div>
+        <div class="cmeta">${esc(r.ch.title)} · 구독 ${fmt(r.ch.subs)}</div>
+        <div class="cmeta">조회 ${fmt(r.v)} · 평소 ${fmt(Math.round(r.base))} · ${ago(r.p)}${hoursSince(r.p) < 72 ? ' · 자라는 중' : ''}</div>
+        <div class="crow">
+          <span class="score s${tier(r.score)}">${fmtScore(r.score)}x</span>
+          <button class="linkbtn" data-boost="${esc(r.ch.handle)}">이 채널 첫 부스트 →</button>
+        </div>
+      </div>
+    </article>`).join('');
+}
+
+function exportCsv() {
+  const head = ['점수', '채널', '구독자', '제목', '링크', '종류', '조회수', '평소 조회수', '올린 지(시간)', '시간당 조회', '올린 날'];
+  const lines = [head.join(',')].concat(state.board.map(r => [fmtScore(r.score) + 'x', r.ch.title, r.ch.subs, r.t, 'https://www.youtube.com/watch?v=' + r.id, r.s ? '쇼츠' : '롱폼', r.v, Math.round(r.base), Math.round(hoursSince(r.p)), Math.round(r.vph), ymd(r.p)]
+    .map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')));
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `터진영상_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+}
+
+// ---------- 탭 2: 첫 부스트 찾기 ----------
+function fillChannelSelect() {
+  const sel = $('#fChannel');
+  sel.innerHTML = parseChannels().map(c => `<option value="${esc(c.handle)}">${esc(state.channels[c.handle]?.title || c.handle)}</option>`).join('');
+}
+
+// 핵심 로직: 점수(직전 10개 대비) + 도약(직후 10개 중앙값 ÷ 직전 10개 중앙값)
+function analyzeBoost(all, type, thr) {
+  const vids = all.filter(v => type === 'all' || (type === 'short' ? v.s : !v.s)).map(v => ({ ...v }));
+  vids.forEach((v, i) => {
+    const prev = vids.slice(Math.max(0, i - BASE_N), i).map(x => x.v);
+    const next = vids.slice(i + 1, i + 1 + BASE_N).map(x => x.v);
+    v.idx = i;
+    v.base = prev.length >= 3 ? mean(prev) : 0;
+    v.score = v.base ? v.v / v.base : NaN;
+    v.preMed = median(prev);
+    v.postMed = median(next);
+    v.lift = prev.length >= 5 && next.length >= 5 && v.preMed > 0 ? v.postMed / v.preMed : NaN;
+    v.rollMed = prev.length ? median(prev) : v.v;
+  });
+  const firstHit = vids.find(v => v.score >= thr);
+  // 첫 부스트: 터졌고(3x+), 그 뒤 평소 조회수가 2배 이상 올라선 첫 영상
+  // 후보가 10개 안에 몰려 있으면 한 번의 도약으로 보고, 그중 점수×도약 배수가 가장 큰 영상을 대표로 고른다
+  // (도약 직전 영상도 직후 10개에 도약분이 섞여 후보가 되기 때문)
+  const cands = vids.filter(v => v.score >= Math.min(3, thr) && v.lift >= 2);
+  const boosts = [];
+  for (let i = 0; i < cands.length;) {
+    let j = i; while (j + 1 < cands.length && cands[j + 1].idx - cands[i].idx <= BASE_N) j++;
+    boosts.push(cands.slice(i, j + 1).sort((a, b) => b.score * b.lift - a.score * a.lift)[0]);
+    i = j + 1;
+  }
+  const firstBoost = boosts[0];
+  const biggest = vids.filter(v => v.score >= 0).sort((a, b) => b.score - a.score)[0];
+  const hits = vids.filter(v => v.score >= thr);
+  return { vids, firstHit, firstBoost, boosts, biggest, hits };
+}
+
+const STOP = new Set('the a an and or of to in on for with is are be 이 그 저 것 수 등 더 및 를 을 은 는 이런 저런 그냥 진짜 정말 이제 지금 바로 모든 함께 영상 ep ft feat vs shorts 쇼츠 live 라이브'.split(' '));
+function keywords(hitVids, allVids) {
+  const tok = t => [...new Set(t.toLowerCase().replace(/#\S+/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length >= 2 && !STOP.has(w) && !/^\d+$/.test(w)))];
+  const cnt = (vs) => { const m = {}; vs.forEach(v => tok(v.t).forEach(w => m[w] = (m[w] || 0) + 1)); return m; };
+  const h = cnt(hitVids), a = cnt(allVids);
+  return Object.entries(h).filter(([, n]) => n >= 2 || hitVids.length <= 4)
+    .map(([w, n]) => ({ w, n, lift: (n / hitVids.length) / ((a[w] || 1) / allVids.length) }))
+    .sort((x, y) => y.lift * Math.log1p(y.n) - x.lift * Math.log1p(x.n)).slice(0, 14);
+}
+
+async function runBoost() {
+  const handleIn = $('#fHandle').value.trim();
+  const handle = handleIn ? (handleIn.startsWith('@') ? handleIn : '@' + handleIn) : $('#fChannel').value;
+  const status = $('#fStatus'), prog = $('#fProg');
+  status.className = 'status';
+  if (!apiKey()) { status.className = 'status err'; status.textContent = '⚙️ 설정에서 YouTube API 키를 먼저 넣어 주세요.'; return; }
+  $('#btnAnalyze').disabled = true; prog.style.display = 'block';
+  try {
+    const hist = store.get('hist', {});
+    let data = hist[handle];
+    if (!data || Date.now() - data.at > 24 * 36e5) {
+      status.textContent = `${handle} 채널 정보 불러오는 중…`;
+      const ch = await getChannel(handle);
+      const videos = await getUploads(ch, Infinity, (n, total, stage) => {
+        prog.firstElementChild.style.width = Math.min(100, n / Math.max(total, 1) * 100) + '%';
+        status.textContent = `${ch.title}: 영상 ${stage} ${n.toLocaleString()} / ${total.toLocaleString()}`;
+      });
+      data = { ch, videos, at: Date.now() };
+      // 저장 공간을 아끼려고 전체 기록 캐시는 최근 5개 채널만 둔다
+      const keys = Object.keys(hist).sort((a, b) => hist[a].at - hist[b].at);
+      while (keys.length >= 5) delete hist[keys.shift()];
+      hist[handle] = data;
+      if (!store.set('hist', hist)) store.set('hist', { [handle]: data });
+    }
+    renderBoost(data);
+    status.textContent = `${data.ch.title} · 영상 ${data.videos.length.toLocaleString()}개 분석 · 데이터 ${new Date(data.at).toLocaleString('ko-KR')}`;
+  } catch (e) {
+    status.className = 'status err'; status.textContent = e.message === 'NO_KEY' ? '⚙️ 설정에서 API 키를 넣어 주세요.' : e.message;
+  } finally { prog.style.display = 'none'; $('#btnAnalyze').disabled = false; }
+}
+
+function videoMini(v, why) {
+  if (!v) return '<div class="big">해당 없음</div><div class="why">기준을 낮춰 보세요.</div>';
+  return `<div class="mini"><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt=""></a>
+    <div><div class="big">${esc(v.t)}</div><div class="why">${ymd(v.p)} · 조회 ${fmt(v.v)} · <span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></div><div class="why">${why}</div></div></div>`;
+}
+
+function renderBoost({ ch, videos }) {
+  const type = $('#fType').value, thr = +$('#fThr').value;
+  const r = analyzeBoost(videos, type, thr);
+  const out = $('#fResult');
+  if (r.vids.length < 5) { out.innerHTML = '<div class="empty">분석할 영상이 너무 적어요. 종류를 "전체"로 바꿔 보세요.</div>'; return; }
+  const fb = r.firstBoost;
+  const kw = keywords(r.hits.length ? r.hits : r.vids.slice(0, 10), r.vids);
+  out.innerHTML = `
+    <div class="two">
+      <div class="panel sum"><h3>🚀 첫 부스트 (채널 체급을 바꾼 영상)</h3>${videoMini(fb, fb ? `이 영상 전 평소 ${fmt(Math.round(fb.preMed))} → 이후 평소 ${fmt(Math.round(fb.postMed))} (<b>${fb.lift.toFixed(1)}배</b>). 채널 ${fb.idx + 1}번째 영상.` : '')}</div>
+      <div class="panel sum"><h3>💥 처음 터진 영상 (${thr}x+)</h3>${videoMini(r.firstHit, r.firstHit ? `직전 ${Math.min(BASE_N, r.firstHit.idx)}개 평균 ${fmt(Math.round(r.firstHit.base))} 대비. 채널 ${r.firstHit.idx + 1}번째 영상.` : '')}</div>
+      <div class="panel sum"><h3>🏆 가장 크게 터진 영상</h3>${videoMini(r.biggest, r.biggest ? `${ago(r.biggest.p)} · 직전 평균 ${fmt(Math.round(r.biggest.base))}` : '')}</div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2 style="margin-top:0">${esc(ch.title)} 영상별 조회수 흐름</h2>
+      <div class="legend">
+        <span><i style="background:var(--t1)"></i>평소 수준</span><span><i style="background:var(--t3)"></i>5x+</span><span><i style="background:var(--t4)"></i>10x+</span><span><i style="background:var(--t5)"></i>25x+</span><span><i style="background:var(--t6)"></i>50x+</span>
+        <span><i style="background:var(--text);border-radius:0;height:2px;width:14px"></i>평소 조회수(직전 10개 중앙값)</span>
+        <span><i style="background:var(--accent);border-radius:0;width:2px;height:12px"></i>첫 부스트</span>
+      </div>
+      <div class="chartwrap" id="chart"></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2 style="margin-top:0">터진 영상 제목에 자주 나온 말</h2>
+      <div class="kw">${kw.map(k => `<span>${esc(k.w)}<em>${k.n}회</em></span>`).join('') || '<span>부족</span>'}</div>
+      <p class="note">${thr}x 이상 터진 영상 ${r.hits.length}개의 제목 단어 중, 채널 전체 제목보다 유독 많이 나온 말이에요.</p>
+    </div>
+    <div class="panel tablewrap">
+      <h2 style="margin-top:0">도약 기록 (터지고 평소 조회수가 2배+ 오른 순간)</h2>
+      ${r.boosts.length ? `<table><thead><tr><th>날짜</th><th>제목</th><th class="num">조회수</th><th class="num">점수</th><th class="num">평소 전→후</th></tr></thead><tbody>
+      ${r.boosts.map(v => `<tr><td>${ymd(v.p)}</td><td><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a></td><td class="num">${fmt(v.v)}</td><td class="num"><span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></td><td class="num">${fmt(Math.round(v.preMed))} → ${fmt(Math.round(v.postMed))} (${v.lift.toFixed(1)}배)</td></tr>`).join('')}
+      </tbody></table>` : '<div class="empty">평소 조회수를 2배 이상 끌어올린 영상이 없어요. 꾸준히 성장한 채널일 수 있어요.</div>'}
+    </div>
+    <div class="panel tablewrap">
+      <h2 style="margin-top:0">터진 영상 전체 (${thr}x+, 오래된 순)</h2>
+      <table><thead><tr><th>날짜</th><th>제목</th><th class="num">조회수</th><th class="num">직전 평균</th><th class="num">점수</th></tr></thead><tbody>
+      ${r.hits.map(v => `<tr><td>${ymd(v.p)}</td><td><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a></td><td class="num">${fmt(v.v)}</td><td class="num">${fmt(Math.round(v.base))}</td><td class="num"><span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <p class="note">조회수는 <b>지금 누적 값</b>이에요. viewstats는 영상이 올라올 당시 값을 쓰지만 YouTube API는 과거 조회수를 주지 않아요. 그래서 오래된 영상은 채널이 큰 뒤에 붙은 조회수까지 들어가 있어요. 첫 부스트는 "후보"로 보고 제목·썸네일을 직접 확인해 주세요.</p>`;
+  drawChart(r);
+}
+
+function drawChart(r) {
+  const el = $('#chart');
+  const W = 1200, H = 360, P = { l: 56, r: 12, t: 12, b: 28 };
+  const vids = r.vids;
+  const t0 = new Date(vids[0].p).getTime(), t1 = new Date(vids[vids.length - 1].p).getTime() || t0 + 1;
+  const maxV = Math.max(10, ...vids.map(v => v.v));
+  const minV = Math.pow(10, Math.floor(Math.log10(Math.max(1, Math.min(...vids.map(v => v.v)) || 1))));
+  const lo = Math.log10(minV), hi = Math.log10(maxV) + 0.05;
+  const x = v => P.l + (new Date(v.p).getTime() - t0) / Math.max(1, t1 - t0) * (W - P.l - P.r);
+  const y = n => P.t + (1 - (Math.log10(Math.max(minV, n)) - lo) / (hi - lo)) * (H - P.t - P.b);
+  const color = s => !(s >= 5) ? 'var(--t1)' : s < 10 ? 'var(--t3)' : s < 25 ? 'var(--t4)' : s < 50 ? 'var(--t5)' : 'var(--t6)';
+  const ticks = []; for (let p = Math.round(lo); Math.pow(10, p) <= maxV * 1.01; p++) ticks.push(Math.pow(10, p));
+  const years = []; for (let yy = new Date(t0).getFullYear() + 1; yy <= new Date(t1).getFullYear(); yy++) years.push(yy);
+  const line = vids.map((v, i) => `${i ? 'L' : 'M'}${x(v).toFixed(1)},${y(v.rollMed).toFixed(1)}`).join('');
+  const fb = r.firstBoost;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="영상별 조회수 산점도">
+    ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${P.l - 6}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--sub)">${fmt(t)}</text>`).join('')}
+    ${years.map(yy => { const xx = P.l + (new Date(yy, 0, 1).getTime() - t0) / Math.max(1, t1 - t0) * (W - P.l - P.r); return `<line x1="${xx}" x2="${xx}" y1="${P.t}" y2="${H - P.b}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${xx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--sub)">${yy}</text>`; }).join('')}
+    ${fb ? `<line x1="${x(fb)}" x2="${x(fb)}" y1="${P.t}" y2="${H - P.b}" stroke="var(--accent)" stroke-width="2"/>` : ''}
+    <path d="${line}" fill="none" stroke="var(--text)" stroke-width="1.5" opacity=".7"/>
+    ${vids.map((v, i) => `<circle data-i="${i}" cx="${x(v).toFixed(1)}" cy="${y(v.v).toFixed(1)}" r="${v.score >= 5 ? 4.5 : 2.5}" fill="${color(v.score)}" opacity="${v.score >= 5 ? .95 : .55}"/>`).join('')}
+  </svg><div class="tip" id="tip"></div>`;
+  const tip = $('#tip'), svg = el.querySelector('svg');
+  svg.addEventListener('mousemove', e => {
+    const c = e.target.closest('circle');
+    if (!c) { tip.style.display = 'none'; return; }
+    const v = vids[+c.dataset.i];
+    tip.innerHTML = `<b>${esc(v.t)}</b><br>${ymd(v.p)} · 조회 ${fmt(v.v)}${v.score >= 0 ? ` · ${fmtScore(v.score)}x` : ''}`;
+    const b = el.getBoundingClientRect();
+    tip.style.display = 'block';
+    tip.style.left = Math.min(e.clientX - b.left + 12, b.width - 290) + 'px';
+    tip.style.top = (e.clientY - b.top + 12) + 'px';
+  });
+  svg.addEventListener('mouseleave', () => tip.style.display = 'none');
+  svg.addEventListener('click', e => { const c = e.target.closest('circle'); if (c) window.open('https://www.youtube.com/watch?v=' + vids[+c.dataset.i].id, '_blank', 'noopener'); });
+}
+
+// ---------- 화면 연결 ----------
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $('#tab-board').hidden = name !== 'board';
+  $('#tab-boost').hidden = name !== 'boost';
+  if (name === 'boost') fillChannelSelect();
+  store.set('tab', name);
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+['#bPeriod', '#bType', '#bMin', '#bSort', '#bBase'].forEach(s => $(s).onchange = () => { store.set('bOpts', ['#bPeriod', '#bType', '#bMin', '#bSort', '#bBase'].map(k => $(k).value)); renderBoard(); });
+$('#btnRefresh').onclick = () => refreshBoard(true);
+$('#btnCsv').onclick = exportCsv;
+$('#bChips').onclick = e => { const c = e.target.closest('.chip'); if (!c) return; activeChip = c.dataset.chip; renderBoard(); };
+$('#bGrid').onclick = e => { const b = e.target.closest('[data-boost]'); if (!b) return; showTab('boost'); $('#fChannel').value = b.dataset.boost; $('#fHandle').value = ''; runBoost(); };
+$('#btnAnalyze').onclick = runBoost;
+['#fType', '#fThr'].forEach(s => $(s).onchange = () => { const h = $('#fHandle').value.trim() || $('#fChannel').value; const d = store.get('hist', {})[h.startsWith('@') ? h : '@' + h]; if (d) renderBoost(d); });
+
+$('#btnSettings').onclick = () => { $('#sKey').value = store.get('ytKey', ''); $('#dlg').showModal(); };
+$('#sCancel').onclick = () => $('#dlg').close();
+$('#sSave').onclick = () => {
+  store.set('ytKey', $('#sKey').value.trim());
+  $('#dlg').close();
+  refreshBoard(false);
+};
+$('#cForm').onsubmit = addChannels;
+$('#cList').onclick = e => { const b = e.target.closest('[data-del]'); if (b) removeChannel(b.dataset.del); };
+const setOpen = open => { $('#cBody').hidden = !open; $('#cToggle').textContent = open ? '접기' : '펼치기'; store.set('cOpen', open); };
+$('#cToggle').onclick = () => setOpen($('#cBody').hidden);
+setOpen(store.get('cOpen', true));
+renderChannelPanel();
+$('#btnTheme').onclick = () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next; store.set('theme', next);
+};
+
+// 시작
+const th = store.get('theme', ''); if (th) document.documentElement.dataset.theme = th;
+const opts = store.get('bOpts', null); if (opts) ['#bPeriod', '#bType', '#bMin', '#bSort', '#bBase'].forEach((k, i) => opts[i] && ($(k).value = opts[i]));
+showTab(store.get('tab', 'board'));
+refreshBoard(false);
+})();
+</script>
+</body>
+</html>
