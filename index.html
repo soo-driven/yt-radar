@@ -5,113 +5,115 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>터진영상 레이더</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
+/* 큐리어스 디자인 가이드 ver.1: 흰 바탕, 초록은 #03C124 하나, 글자 #171717 / 보조 #525252 이하로 연하게 쓰지 않음, Pretendard */
 :root{
-  --bg:#f6f6f4; --panel:#ffffff; --panel2:#f0efec; --line:#e2e0db; --text:#1d1d1b; --sub:#6b6a66;
-  --accent:#e5484d; --accent-weak:#fde8e8; --link:#2563eb;
-  --t1:#9a9893; --t2:#3b82f6; --t3:#16a34a; --t4:#d97706; --t5:#dc2626; --t6:#9333ea;
-  --shadow:0 1px 2px rgba(0,0,0,.06);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#111111; --panel:#1b1b1b; --panel2:#242424; --line:#2f2f2f; --text:#ededed; --sub:#9b9b9b;
-    --accent:#ff5a5f; --accent-weak:#3a1d1e; --link:#7aa7ff;
-    --t1:#8a8a8a; --t2:#60a5fa; --t3:#4ade80; --t4:#fbbf24; --t5:#f87171; --t6:#c084fc;
-    --shadow:none;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#111111; --panel:#1b1b1b; --panel2:#242424; --line:#2f2f2f; --text:#ededed; --sub:#9b9b9b;
-  --accent:#ff5a5f; --accent-weak:#3a1d1e; --link:#7aa7ff;
-  --t1:#8a8a8a; --t2:#60a5fa; --t3:#4ade80; --t4:#fbbf24; --t5:#f87171; --t6:#c084fc;
-  --shadow:none;
+  --green:#03C124; --green-text:#02891A; --green-weak:#E6F9E9;
+  --text:#171717; --sub:#525252; --line:#E5E5E5;
+  --bg:#F5F5F5; --panel:#FFFFFF; --blue:#0072E1;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
-a{color:var(--link);text-decoration:none}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Pretendard Variable","Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline}
 button,input,select,textarea{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
 .bar{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.logo{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px}
-.logo i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.logo{font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
+.logo i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--green)}
 .tabs{display:flex;gap:4px;margin-left:8px}
-.tab{border:0;background:transparent;padding:7px 12px;border-radius:8px;cursor:pointer;color:var(--sub);font-weight:600}
-.tab.on{background:var(--panel2);color:var(--text)}
+.tab{border:0;background:transparent;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--sub);font-weight:600;font-size:16px}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--text);color:#fff}
 .spacer{flex:1}
-.btn{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-.btn:hover{border-color:var(--sub)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn{border:1px solid var(--line);background:var(--panel);padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:16px}
+.btn:hover{border-color:var(--text)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--text)}
+.btn.primary:hover{border-color:var(--green-text)}
 .btn:disabled{opacity:.5;cursor:default}
-main{max-width:1280px;margin:0 auto;padding:16px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
-.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--sub)}
-.field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:90px}
-.status{font-size:12px;color:var(--sub);margin-top:10px;min-height:18px}
-.status.err{color:var(--accent)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
-.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
-.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
-.chip b{font-weight:700;margin-left:4px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:8px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
-.thumb{position:relative;aspect-ratio:16/9;background:var(--panel2);display:block}
+main{max-width:1280px;margin:0 auto;padding:20px 16px 40px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px;font-size:15px;color:var(--sub);font-weight:600}
+.field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:100px;color:var(--text);font-weight:400}
+.field select:focus,.field input:focus,.cadd input:focus,dialog input:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+.status{font-size:15px;color:var(--sub);margin-top:12px;min-height:24px}
+.status.err{color:var(--text);font-weight:700}
+.status.err::before{content:"⚠️ "}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 12px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:15px;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--text)}
+.chip.on{background:var(--text);color:#fff;border-color:var(--text)}
+.chip b{font-weight:700;margin-left:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{position:relative;aspect-ratio:16/9;background:var(--bg);display:block}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .dur{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-size:11px;padding:1px 5px;border-radius:4px}
-.thumb .new{position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px}
-.cbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
-.ctitle{font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.cmeta{font-size:12px;color:var(--sub)}
-.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto}
-.score{font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
-.s1{color:var(--t1)}.s2{color:var(--t2)}.s3{color:var(--t3)}.s4{color:var(--t4)}.s5{color:var(--t5)}.s6{color:var(--t6)}
-.linkbtn{border:0;background:none;color:var(--link);cursor:pointer;padding:0;font-size:12px}
-.empty{padding:40px 16px;text-align:center;color:var(--sub)}
-.two{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.thumb .dur{position:absolute;right:8px;bottom:8px;background:rgba(23,23,23,.85);color:#fff;font-size:14px;font-weight:600;padding:1px 7px;border-radius:6px}
+.thumb .new{position:absolute;left:8px;top:8px;background:var(--text);color:#fff;font-size:14px;font-weight:700;padding:1px 8px;border-radius:6px}
+.cbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.ctitle{font-weight:700;font-size:17px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cmeta{font-size:15px;color:var(--sub)}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:6px}
+/* 점수: 색 대신 진하기로 구간을 나눈다. 초록은 5x부터 */
+.score{display:inline-block;font-weight:800;font-size:15px;line-height:1.4;padding:2px 10px;border-radius:999px;border:1.5px solid var(--line);white-space:nowrap;color:var(--sub);background:var(--panel)}
+.s2{color:var(--text);border-color:var(--text)}
+.s3{color:var(--text);border-color:var(--green);background:var(--green-weak)}
+.s4{color:var(--text);border-color:var(--green);background:var(--green)}
+.s5,.s6{color:#fff;border-color:var(--text);background:var(--text)}
+.linkbtn{border:0;background:none;color:var(--green-text);cursor:pointer;padding:0;font-size:15px;font-weight:700}
+.linkbtn:hover{text-decoration:underline}
+.empty{padding:48px 16px;text-align:center;color:var(--sub);font-size:16px}
+.two{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
 @media(min-width:900px){.two{grid-template-columns:repeat(3,1fr)}}
-.sum h3{margin:0 0 4px;font-size:12px;color:var(--sub);font-weight:600}
-.sum .big{font-size:15px;font-weight:700;line-height:1.35}
-.sum .why{font-size:12px;color:var(--sub);margin-top:6px}
-.sum .mini{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
-.sum .mini img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex:none;background:var(--panel2)}
-.chartwrap{margin-top:14px;position:relative}
+.sum h3{margin:0 0 6px;font-size:16px;color:var(--text);font-weight:700}
+.sum .big{font-size:17px;font-weight:700;line-height:1.45}
+.sum .why{font-size:15px;color:var(--sub);margin-top:6px}
+.sum .mini{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.sum .mini a{display:block}
+.sum .mini img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block;background:var(--bg)}
+.chartwrap{margin-top:16px;position:relative}
 .chartwrap svg{width:100%;height:auto;display:block}
-.tip{position:absolute;pointer-events:none;background:var(--text);color:var(--bg);font-size:12px;padding:6px 8px;border-radius:6px;max-width:280px;display:none;z-index:3}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:6px}
-.legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;color:var(--sub);font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:#fff;font-size:15px;line-height:1.5;padding:8px 10px;border-radius:8px;max-width:300px;display:none;z-index:3}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:15px;color:var(--sub);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:15px;color:var(--sub);font-weight:700}
+td a{font-weight:600}
 td.num,th.num{text-align:right;white-space:nowrap}
-.tablewrap{overflow-x:auto;margin-top:14px}
-.kw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.kw span{background:var(--accent-weak);color:var(--text);border-radius:6px;padding:2px 8px;font-size:12px}
-.kw span em{font-style:normal;color:var(--sub);margin-left:4px}
-.note{font-size:12px;color:var(--sub);margin-top:10px}
-h2{font-size:16px;margin:18px 0 6px}
-dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);max-width:640px;width:calc(100% - 32px);padding:18px}
-dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog textarea,dialog input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px}
-dialog textarea{min-height:220px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
-dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
-.row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
-.chead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.cadd{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.cadd input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
-#cInput{flex:1 1 260px;min-width:0}
-#cTag{flex:0 1 170px;min-width:0}
-.cmsg{font-size:12px;color:var(--sub);min-height:18px;margin-top:6px}
-.clist{display:flex;gap:6px;flex-wrap:wrap;max-height:180px;overflow-y:auto}
-.cchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:3px 4px 3px 4px;font-size:12px;max-width:100%}
-.cchip img{width:18px;height:18px;border-radius:50%}
-.cchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;padding-left:4px}
+.tablewrap{overflow-x:auto;margin-top:16px}
+.kw{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.kw span{background:var(--green-weak);color:var(--text);border-radius:8px;padding:4px 10px;font-size:16px;font-weight:600}
+.kw span em{font-style:normal;color:var(--sub);margin-left:6px;font-weight:400}
+.note{font-size:15px;color:var(--sub);margin-top:14px}
+h2{font-size:20px;margin:20px 0 8px;letter-spacing:-.01em}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--text);max-width:640px;width:calc(100% - 32px);padding:22px}
+dialog h3{font-size:20px}
+dialog::backdrop{background:rgba(23,23,23,.45)}
+dialog input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
+dialog label{display:block;font-size:15px;color:var(--sub);margin:14px 0 6px}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.chead{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.chead b{font-size:20px}
+.cadd{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cadd input{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:16px}
+#cInput{flex:1 1 280px;min-width:0}
+#cTag{flex:0 1 190px;min-width:0}
+.cmsg{font-size:15px;color:var(--sub);min-height:24px;margin-top:8px}
+.clist{display:flex;gap:8px;flex-wrap:wrap;max-height:200px;overflow-y:auto}
+.cchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 4px 4px 6px;font-size:15px;max-width:100%}
+.cchip img{width:22px;height:22px;border-radius:50%}
+.cchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;padding-left:2px;font-weight:600}
 .cchip em{font-style:normal;color:var(--sub)}
-.cchip button{border:0;background:transparent;color:var(--sub);cursor:pointer;width:20px;height:20px;border-radius:50%;line-height:1;font-size:14px}
+.cchip button{border:0;background:transparent;color:var(--sub);cursor:pointer;width:26px;height:26px;border-radius:50%;line-height:1;font-size:18px}
 .cchip button:hover{background:var(--line);color:var(--text)}
-.cchip.bad{border-color:var(--accent);color:var(--accent)}
-.progress{height:3px;background:var(--panel2);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
-.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.cchip.bad{border:1.5px dashed var(--text);background:var(--panel)}
+.cchip.bad span::before{content:"⚠️ "}
+.progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:10px;display:none}
+.progress i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
 </style>
 </head>
 <body>
@@ -123,7 +125,6 @@ dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
       <button class="tab" data-tab="boost">첫 부스트 찾기</button>
     </nav>
     <div class="spacer"></div>
-    <button class="btn" id="btnTheme" title="밝게/어둡게">◐</button>
     <button class="btn" id="btnSettings">⚙️ 설정</button>
   </div>
 </header>
@@ -134,13 +135,13 @@ dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
     <div class="panel cpanel">
       <div class="chead">
         <b>감시 채널 <span id="cCount">0</span>개</b>
-        <span class="cmeta">핸들(@jocoding)이나 채널 주소를 붙여 넣으세요. 쉼표나 줄바꿈으로 여러 개를 한 번에 넣을 수 있어요.</span>
+        <span class="cmeta">그 채널의 영상 링크를 붙여 넣으면 돼요. 채널 주소나 @핸들도 돼요. 띄어쓰기나 쉼표로 여러 개를 한 번에 넣을 수 있어요.</span>
         <div class="spacer"></div>
         <button class="linkbtn" id="cToggle">접기</button>
       </div>
       <div id="cBody">
         <form class="cadd" id="cForm">
-          <input id="cInput" placeholder="@핸들 또는 youtube.com/@핸들" autocomplete="off" aria-label="추가할 채널">
+          <input id="cInput" placeholder="영상 링크 붙여넣기 (예: https://youtu.be/…)" autocomplete="off" aria-label="추가할 채널">
           <input id="cTag" list="cTags" placeholder="그룹 (선택, 예: AI)" autocomplete="off" aria-label="그룹">
           <datalist id="cTags"></datalist>
           <button class="btn primary" type="submit">+ 추가</button>
@@ -175,7 +176,7 @@ dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
     </div>
     <div class="chips" id="bChips"></div>
     <div class="grid" id="bGrid"></div>
-    <p class="note">점수 = 영상 조회수 ÷ 같은 채널·같은 종류(롱폼/쇼츠)의 직전 업로드 10개 조회수. 쇼츠는 길이 3분 이하로 추정해요. 조회수는 지금 누적 값이라, 올라온 지 3일이 안 된 영상은 점수가 낮게 나올 수 있어요.</p>
+    <p class="note">점수 = 영상 조회수 ÷ 같은 채널, 같은 종류(롱폼/쇼츠)의 직전 업로드 10개 조회수. 쇼츠는 길이 3분 이하로 추정해요. 조회수는 지금 누적 값이라, 올라온 지 3일이 안 된 영상은 점수가 낮게 나올 수 있어요.</p>
   </section>
 
   <!-- 탭 2: 첫 부스트 찾기 -->
@@ -206,7 +207,7 @@ dialog label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
 
 <dialog id="dlg">
   <h3 style="margin:0">설정</h3>
-  <label for="sKey">개인 YouTube Data API 키 (선택 · 이 브라우저에만 저장돼요. 비워 두면 팀 공용 키를 써요)</label>
+  <label for="sKey">개인 YouTube Data API 키 (선택. 이 브라우저에만 저장돼요. 비워 두면 팀 공용 키를 써요)</label>
   <input id="sKey" type="password" placeholder="AIza..." autocomplete="off">
   <div class="row">
     <button class="btn" id="sCancel">닫기</button>
@@ -281,7 +282,7 @@ function parseChannels() {
   return txt.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
     const tags = (l.match(/#[^\s#]+/g) || []).map(t => t.slice(1));
     const handle = l.replace(/#[^\s#]+/g, '').trim();
-    return { handle: handle.startsWith('@') ? handle : '@' + handle, tags };
+    return { handle: handle.startsWith('@') || /^UC[\w-]{22}$/.test(handle) ? handle : '@' + handle, tags };
   });
 }
 
@@ -289,13 +290,35 @@ function saveChannels(list) {
   store.set('channels', list.map(c => [c.handle, ...c.tags.map(t => '#' + t)].join(' ')).join('\n'));
 }
 
-// "@x", "x", "https://www.youtube.com/@x/videos" 모두 받는다
-function normHandle(s) {
+// 붙여 넣은 값 하나를 핸들 / 영상 / 채널 ID로 나눈다
+// 받는 것: @x, x, youtube.com/@x, youtube.com/channel/UC…, 영상 링크(watch, shorts, live, embed, youtu.be)
+function parseInput(s) {
   s = s.trim();
-  const m = s.match(/youtube\.com\/(@[^/?#\s]+)/i);
-  if (m) s = decodeURIComponent(m[1]);
-  if (!s || /^https?:/i.test(s)) return '';
-  return s.startsWith('@') ? s : '@' + s;
+  if (!s) return null;
+  let m = s.match(/(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/i);
+  if (m) return { kind: 'video', id: m[1], raw: s };
+  m = s.match(/youtube\.com\/channel\/(UC[\w-]{22})/i);
+  if (m) return { kind: 'channel', id: m[1], raw: s };
+  m = s.match(/youtube\.com\/(@[^/?#\s]+)/i);
+  if (m) return { kind: 'handle', id: decodeURIComponent(m[1]), raw: s };
+  if (/^https?:|\//i.test(s)) return { kind: 'bad', raw: s };
+  return { kind: 'handle', id: s.startsWith('@') ? s : '@' + s, raw: s };
+}
+
+// 영상·채널 ID를 감시 목록에 넣을 핸들로 바꾼다. 핸들이 없는 채널은 UC… ID를 그대로 쓴다
+async function resolveInput(p) {
+  if (p.kind === 'handle') return p.id;
+  if (p.kind === 'bad') throw new Error('유튜브 영상이나 채널 주소가 아니에요');
+  let cid = p.id;
+  if (p.kind === 'video') {
+    const j = await yt('videos', { part: 'snippet', id: p.id });
+    cid = j.items?.[0]?.snippet?.channelId;
+    if (!cid) throw new Error('영상을 찾지 못했어요(비공개이거나 삭제된 영상일 수 있어요)');
+  }
+  const c = await yt('channels', { part: 'snippet', id: cid });
+  const sn = c.items?.[0]?.snippet;
+  if (!sn) throw new Error('채널을 찾지 못했어요');
+  return sn.customUrl ? (sn.customUrl.startsWith('@') ? sn.customUrl : '@' + sn.customUrl) : cid;
 }
 
 // ---------- YouTube API ----------
@@ -313,7 +336,8 @@ async function yt(path, params) {
 }
 
 async function getChannel(handle) {
-  const j = await yt('channels', { part: 'snippet,statistics,contentDetails', forHandle: handle });
+  const byId = /^UC[\w-]{22}$/.test(handle);
+  const j = await yt('channels', { part: 'snippet,statistics,contentDetails', ...(byId ? { id: handle } : { forHandle: handle }) });
   const c = j.items?.[0];
   if (!c) throw new Error(`${handle} 채널을 찾지 못했어요`);
   return {
@@ -389,7 +413,7 @@ async function refreshBoard(force) {
   const okCount = list.length - fails.length;
   renderChannelPanel();
   status.className = fails.length ? 'status err' : 'status';
-  status.textContent = `${okCount}개 채널 불러옴 · ${new Date().toLocaleString('ko-KR')}` + (fails.length ? ` · 실패: ${fails.join(', ')}` : '');
+  status.textContent = `${okCount}개 채널 불러옴, ${new Date().toLocaleString('ko-KR')}` + (fails.length ? `, 실패: ${fails.join(', ')}` : '');
   renderBoard();
 }
 
@@ -416,7 +440,7 @@ function renderChannelPanel() {
   $('#cCount').textContent = list.length;
   $('#cList').innerHTML = list.map(c => {
     const ch = state.channels[c.handle], bad = state.failed[c.handle];
-    return `<span class="cchip${bad ? ' bad' : ''}" title="${esc(bad ? c.handle + ' · ' + bad : c.handle)}">
+    return `<span class="cchip${bad ? ' bad' : ''}" title="${esc(bad ? c.handle + ': ' + bad : c.handle)}">
       ${ch?.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : ''}<span>${esc(ch?.title || c.handle)}</span>${c.tags.map(t => `<em>#${esc(t)}</em>`).join('')}
       <button type="button" data-del="${esc(c.handle)}" aria-label="${esc(c.handle)} 빼기">×</button></span>`;
   }).join('') || '<span class="cmeta">아직 감시 채널이 없어요. 위에 핸들을 넣어 추가해 주세요.</span>';
@@ -425,16 +449,28 @@ function renderChannelPanel() {
 
 async function addChannels(e) {
   e.preventDefault();
-  const handles = $('#cInput').value.split(/[\s,]+/).map(normHandle).filter(Boolean);
+  const inputs = $('#cInput').value.split(/[\s,]+/).map(parseInput).filter(Boolean);
   const tag = $('#cTag').value.trim().replace(/^#/, '').replace(/\s+/g, '');
   const msg = $('#cMsg');
-  if (!handles.length) { msg.textContent = '채널 핸들(@로 시작)이나 youtube.com/@핸들 주소를 넣어 주세요.'; return; }
-  const list = parseChannels(), added = [];
+  if (!inputs.length) { msg.textContent = '영상 링크, 채널 주소, @핸들 중 하나를 넣어 주세요.'; return; }
+  const needApi = inputs.some(p => p.kind === 'video' || p.kind === 'channel');
+  if (needApi && !apiKey()) { msg.textContent = '영상 링크로 추가하려면 ⚙️ 설정에 API 키가 필요해요.'; return; }
+  if (needApi) msg.textContent = '링크에서 채널 찾는 중…';
+  const handles = [], bad = [];
+  for (const p of inputs) {
+    try { handles.push(await resolveInput(p)); }
+    catch (err) {
+      if (err.message === 'NO_KEY') { msg.textContent = '⚙️ 설정에 API 키를 넣어 주세요.'; return; }
+      bad.push(`⚠️ ${p.raw.length > 40 ? p.raw.slice(0, 40) + '…' : p.raw}: ${err.message}`);
+    }
+  }
+  const list = parseChannels(), added = [], dup = [];
   for (const h of handles) {
-    if (list.some(c => c.handle.toLowerCase() === h.toLowerCase()) || added.includes(h)) continue;
+    if (list.some(c => c.handle.toLowerCase() === h.toLowerCase()) || added.includes(h)) { dup.push(h); continue; }
     list.push({ handle: h, tags: tag ? [tag] : [] }); added.push(h);
   }
-  if (!added.length) { msg.textContent = '이미 감시 중인 채널이에요.'; return; }
+  const extra = [...bad, ...(dup.length ? [`이미 감시 중: ${[...new Set(dup)].join(', ')}`] : [])].join('  ');
+  if (!added.length) { msg.textContent = extra || '이미 감시 중인 채널이에요.'; return; }
   saveChannels(list);
   $('#cInput').value = '';
   renderChannelPanel();
@@ -445,14 +481,14 @@ async function addChannels(e) {
     for (const h of added) await loadChannel(h, tag ? [tag] : [], true, cache);
   } catch (err) { msg.textContent = err.message === 'NO_KEY' ? '⚙️ 설정에 API 키를 넣어 주세요.' : err.message; return; }
   store.set('boardCache', cache);
-  msg.textContent = added.map(h => state.failed[h] ? `⚠️ ${h}: ${state.failed[h]}` : `✓ ${state.channels[h].title} 추가됨`).join(' · ');
+  msg.textContent = [...added.map(h => state.failed[h] ? `⚠️ ${h}: ${state.failed[h]}` : `✓ ${state.channels[h].title} 추가됨`), extra].filter(Boolean).join('  ');
   syncBoardStatus(); renderChannelPanel(); renderBoard();
 }
 
 function syncBoardStatus() {
   const fails = parseChannels().filter(c => state.failed[c.handle]).map(c => `${c.handle} (${state.failed[c.handle]})`);
   $('#bStatus').className = fails.length ? 'status err' : 'status';
-  $('#bStatus').textContent = `${Object.keys(state.channels).length}개 채널 불러옴` + (fails.length ? ` · 실패: ${fails.join(', ')}` : '');
+  $('#bStatus').textContent = `${Object.keys(state.channels).length}개 채널 불러옴` + (fails.length ? `, 실패: ${fails.join(', ')}` : '');
 }
 
 function removeChannel(handle) {
@@ -519,8 +555,8 @@ function renderBoard() {
       </a>
       <div class="cbody">
         <div class="ctitle" title="${esc(r.t)}">${esc(r.t)}</div>
-        <div class="cmeta">${esc(r.ch.title)} · 구독 ${fmt(r.ch.subs)}</div>
-        <div class="cmeta">조회 ${fmt(r.v)} · 평소 ${fmt(Math.round(r.base))} · ${ago(r.p)}${hoursSince(r.p) < 72 ? ' · 자라는 중' : ''}</div>
+        <div class="cmeta">${esc(r.ch.title)}, 구독 ${fmt(r.ch.subs)}</div>
+        <div class="cmeta">조회 ${fmt(r.v)}, 평소 ${fmt(Math.round(r.base))}, ${ago(r.p)}${hoursSince(r.p) < 72 ? ', 자라는 중' : ''}</div>
         <div class="crow">
           <span class="score s${tier(r.score)}">${fmtScore(r.score)}x</span>
           <button class="linkbtn" data-boost="${esc(r.ch.handle)}">이 채널 첫 부스트 →</button>
@@ -609,7 +645,7 @@ async function runBoost() {
       if (!store.set('hist', hist)) store.set('hist', { [handle]: data });
     }
     renderBoost(data);
-    status.textContent = `${data.ch.title} · 영상 ${data.videos.length.toLocaleString()}개 분석 · 데이터 ${new Date(data.at).toLocaleString('ko-KR')}`;
+    status.textContent = `${data.ch.title}, 영상 ${data.videos.length.toLocaleString()}개 분석, 데이터 ${new Date(data.at).toLocaleString('ko-KR')}`;
   } catch (e) {
     status.className = 'status err'; status.textContent = e.message === 'NO_KEY' ? '⚙️ 설정에서 API 키를 넣어 주세요.' : e.message;
   } finally { prog.style.display = 'none'; $('#btnAnalyze').disabled = false; }
@@ -618,7 +654,7 @@ async function runBoost() {
 function videoMini(v, why) {
   if (!v) return '<div class="big">해당 없음</div><div class="why">기준을 낮춰 보세요.</div>';
   return `<div class="mini"><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt=""></a>
-    <div><div class="big">${esc(v.t)}</div><div class="why">${ymd(v.p)} · 조회 ${fmt(v.v)} · <span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></div><div class="why">${why}</div></div></div>`;
+    <div><div class="big">${esc(v.t)}</div><div class="why">${ymd(v.p)}, 조회 ${fmt(v.v)}, <span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></div><div class="why">${why}</div></div></div>`;
 }
 
 function renderBoost({ ch, videos }) {
@@ -632,14 +668,14 @@ function renderBoost({ ch, videos }) {
     <div class="two">
       <div class="panel sum"><h3>🚀 첫 부스트 (채널 체급을 바꾼 영상)</h3>${videoMini(fb, fb ? `이 영상 전 평소 ${fmt(Math.round(fb.preMed))} → 이후 평소 ${fmt(Math.round(fb.postMed))} (<b>${fb.lift.toFixed(1)}배</b>). 채널 ${fb.idx + 1}번째 영상.` : '')}</div>
       <div class="panel sum"><h3>💥 처음 터진 영상 (${thr}x+)</h3>${videoMini(r.firstHit, r.firstHit ? `직전 ${Math.min(BASE_N, r.firstHit.idx)}개 평균 ${fmt(Math.round(r.firstHit.base))} 대비. 채널 ${r.firstHit.idx + 1}번째 영상.` : '')}</div>
-      <div class="panel sum"><h3>🏆 가장 크게 터진 영상</h3>${videoMini(r.biggest, r.biggest ? `${ago(r.biggest.p)} · 직전 평균 ${fmt(Math.round(r.biggest.base))}` : '')}</div>
+      <div class="panel sum"><h3>🏆 가장 크게 터진 영상</h3>${videoMini(r.biggest, r.biggest ? `${ago(r.biggest.p)}, 직전 평균 ${fmt(Math.round(r.biggest.base))}` : '')}</div>
     </div>
     <div class="panel" style="margin-top:14px">
       <h2 style="margin-top:0">${esc(ch.title)} 영상별 조회수 흐름</h2>
       <div class="legend">
-        <span><i style="background:var(--t1)"></i>평소 수준</span><span><i style="background:var(--t3)"></i>5x+</span><span><i style="background:var(--t4)"></i>10x+</span><span><i style="background:var(--t5)"></i>25x+</span><span><i style="background:var(--t6)"></i>50x+</span>
-        <span><i style="background:var(--text);border-radius:0;height:2px;width:14px"></i>평소 조회수(직전 10개 중앙값)</span>
-        <span><i style="background:var(--accent);border-radius:0;width:2px;height:12px"></i>첫 부스트</span>
+        <span><i style="background:var(--sub);opacity:.4"></i>평소 수준</span><span><i style="background:var(--green)"></i>5x+ 터짐</span><span><i style="background:var(--text)"></i>25x+ 크게 터짐</span>
+        <span><i style="background:var(--text);border-radius:0;height:2px;width:16px"></i>평소 조회수(직전 10개 중앙값)</span>
+        <span><i style="background:var(--blue);border-radius:0;width:3px;height:14px"></i>첫 부스트</span>
       </div>
       <div class="chartwrap" id="chart"></div>
     </div>
@@ -660,13 +696,13 @@ function renderBoost({ ch, videos }) {
       ${r.hits.map(v => `<tr><td>${ymd(v.p)}</td><td><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a></td><td class="num">${fmt(v.v)}</td><td class="num">${fmt(Math.round(v.base))}</td><td class="num"><span class="score s${tier(v.score)}">${fmtScore(v.score)}x</span></td></tr>`).join('')}
       </tbody></table>
     </div>
-    <p class="note">조회수는 <b>지금 누적 값</b>이에요. viewstats는 영상이 올라올 당시 값을 쓰지만 YouTube API는 과거 조회수를 주지 않아요. 그래서 오래된 영상은 채널이 큰 뒤에 붙은 조회수까지 들어가 있어요. 첫 부스트는 "후보"로 보고 제목·썸네일을 직접 확인해 주세요.</p>`;
+    <p class="note">조회수는 <b>지금 누적 값</b>이에요. viewstats는 영상이 올라올 당시 값을 쓰지만 YouTube API는 과거 조회수를 주지 않아요. 그래서 오래된 영상은 채널이 큰 뒤에 붙은 조회수까지 들어가 있어요. 첫 부스트는 "후보"로 보고 제목과 썸네일을 직접 확인해 주세요.</p>`;
   drawChart(r);
 }
 
 function drawChart(r) {
   const el = $('#chart');
-  const W = 1200, H = 360, P = { l: 56, r: 12, t: 12, b: 28 };
+  const W = 1200, H = 380, P = { l: 72, r: 12, t: 14, b: 34 };
   const vids = r.vids;
   const t0 = new Date(vids[0].p).getTime(), t1 = new Date(vids[vids.length - 1].p).getTime() || t0 + 1;
   const maxV = Math.max(10, ...vids.map(v => v.v));
@@ -674,24 +710,24 @@ function drawChart(r) {
   const lo = Math.log10(minV), hi = Math.log10(maxV) + 0.05;
   const x = v => P.l + (new Date(v.p).getTime() - t0) / Math.max(1, t1 - t0) * (W - P.l - P.r);
   const y = n => P.t + (1 - (Math.log10(Math.max(minV, n)) - lo) / (hi - lo)) * (H - P.t - P.b);
-  const color = s => !(s >= 5) ? 'var(--t1)' : s < 10 ? 'var(--t3)' : s < 25 ? 'var(--t4)' : s < 50 ? 'var(--t5)' : 'var(--t6)';
+  const color = s => !(s >= 5) ? 'var(--sub)' : s < 25 ? 'var(--green)' : 'var(--text)';
   const ticks = []; for (let p = Math.round(lo); Math.pow(10, p) <= maxV * 1.01; p++) ticks.push(Math.pow(10, p));
   const years = []; for (let yy = new Date(t0).getFullYear() + 1; yy <= new Date(t1).getFullYear(); yy++) years.push(yy);
   const line = vids.map((v, i) => `${i ? 'L' : 'M'}${x(v).toFixed(1)},${y(v.rollMed).toFixed(1)}`).join('');
   const fb = r.firstBoost;
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="영상별 조회수 산점도">
-    ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${P.l - 6}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--sub)">${fmt(t)}</text>`).join('')}
-    ${years.map(yy => { const xx = P.l + (new Date(yy, 0, 1).getTime() - t0) / Math.max(1, t1 - t0) * (W - P.l - P.r); return `<line x1="${xx}" x2="${xx}" y1="${P.t}" y2="${H - P.b}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${xx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--sub)">${yy}</text>`; }).join('')}
-    ${fb ? `<line x1="${x(fb)}" x2="${x(fb)}" y1="${P.t}" y2="${H - P.b}" stroke="var(--accent)" stroke-width="2"/>` : ''}
+    ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${P.l - 6}" y="${y(t) + 4}" text-anchor="end" font-size="15" fill="var(--sub)">${fmt(t)}</text>`).join('')}
+    ${years.map(yy => { const xx = P.l + (new Date(yy, 0, 1).getTime() - t0) / Math.max(1, t1 - t0) * (W - P.l - P.r); return `<line x1="${xx}" x2="${xx}" y1="${P.t}" y2="${H - P.b}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${xx}" y="${H - 8}" text-anchor="middle" font-size="15" fill="var(--sub)">${yy}</text>`; }).join('')}
+    ${fb ? `<line x1="${x(fb)}" x2="${x(fb)}" y1="${P.t}" y2="${H - P.b}" stroke="var(--blue)" stroke-width="2.5"/>` : ''}
     <path d="${line}" fill="none" stroke="var(--text)" stroke-width="1.5" opacity=".7"/>
-    ${vids.map((v, i) => `<circle data-i="${i}" cx="${x(v).toFixed(1)}" cy="${y(v.v).toFixed(1)}" r="${v.score >= 5 ? 4.5 : 2.5}" fill="${color(v.score)}" opacity="${v.score >= 5 ? .95 : .55}"/>`).join('')}
+    ${vids.map((v, i) => `<circle data-i="${i}" cx="${x(v).toFixed(1)}" cy="${y(v.v).toFixed(1)}" r="${v.score >= 5 ? 5 : 2.5}" fill="${color(v.score)}" opacity="${v.score >= 5 ? 1 : .35}"/>`).join('')}
   </svg><div class="tip" id="tip"></div>`;
   const tip = $('#tip'), svg = el.querySelector('svg');
   svg.addEventListener('mousemove', e => {
     const c = e.target.closest('circle');
     if (!c) { tip.style.display = 'none'; return; }
     const v = vids[+c.dataset.i];
-    tip.innerHTML = `<b>${esc(v.t)}</b><br>${ymd(v.p)} · 조회 ${fmt(v.v)}${v.score >= 0 ? ` · ${fmtScore(v.score)}x` : ''}`;
+    tip.innerHTML = `<b>${esc(v.t)}</b><br>${ymd(v.p)}, 조회 ${fmt(v.v)}${v.score >= 0 ? `, ${fmtScore(v.score)}x` : ''}`;
     const b = el.getBoundingClientRect();
     tip.style.display = 'block';
     tip.style.left = Math.min(e.clientX - b.left + 12, b.width - 290) + 'px';
@@ -731,14 +767,7 @@ const setOpen = open => { $('#cBody').hidden = !open; $('#cToggle').textContent 
 $('#cToggle').onclick = () => setOpen($('#cBody').hidden);
 setOpen(store.get('cOpen', true));
 renderChannelPanel();
-$('#btnTheme').onclick = () => {
-  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next; store.set('theme', next);
-};
-
 // 시작
-const th = store.get('theme', ''); if (th) document.documentElement.dataset.theme = th;
 const opts = store.get('bOpts', null); if (opts) ['#bPeriod', '#bType', '#bMin', '#bSort', '#bBase'].forEach((k, i) => opts[i] && ($(k).value = opts[i]));
 showTab(store.get('tab', 'board'));
 refreshBoard(false);
