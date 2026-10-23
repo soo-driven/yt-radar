@@ -130,6 +130,41 @@ dialog label{display:block;font-size:15px;color:var(--sub);margin:14px 0 6px}
 .snote:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
 .progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:10px;display:none}
 .progress i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+.crow{flex-wrap:wrap}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tab{white-space:nowrap;flex:none}
+@media(max-width:760px){.tabs{order:3;width:100%;margin-left:0}}
+.pick{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:2px 10px;font-size:15px;font-weight:700;cursor:pointer;color:var(--text);white-space:nowrap}
+.pick:hover{border-color:var(--text)}
+.pick.on{border-color:var(--text);background:var(--text);color:var(--on-text)}
+/* 선택 바: 영상을 고르면 화면 아래에 뜬다 */
+.selbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(23,23,23,.08)}
+.selin{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.selin .status{margin:0;flex-basis:100%}
+.selin #selTxt{font-weight:700}
+body.has-sel main{padding-bottom:120px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:26px;line-height:1.3}
+.stat span{font-size:15px;color:var(--sub)}
+.ulist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ulist li{display:flex;gap:10px;align-items:center;font-size:16px}
+.ulist img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none;background:var(--bg)}
+.ins{margin-top:16px}
+.ins h3{font-size:19px;line-height:1.5;margin:6px 0 12px}
+.ins h4{font-size:16px;margin:18px 0 6px}
+.ins ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.ivids{display:flex;gap:10px;flex-wrap:wrap}
+.ivids a{display:flex;flex-direction:column;gap:4px;width:180px;font-size:14px;color:var(--sub)}
+.ivids img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--bg)}
+.ivids span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ins details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.ins summary{cursor:pointer;font-weight:700}
+.ivid{margin-top:14px}
+.ivid dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 0;font-size:15px}
+.ivid dt{color:var(--sub);font-weight:700;white-space:nowrap}
+.ivid dd{margin:0}
 </style>
 </head>
 <body>
@@ -138,8 +173,10 @@ dialog label{display:block;font-size:15px;color:var(--sub);margin:14px 0 6px}
     <div class="logo"><i></i>터진영상 레이더</div>
     <nav class="tabs">
       <button class="tab on" data-tab="board">터진 영상 보드</button>
+      <button class="tab" data-tab="report">📋 오늘의 리포트</button>
       <button class="tab" data-tab="boost">첫 부스트 찾기</button>
       <button class="tab" data-tab="saved">⭐ 보관함 <span id="savedCount"></span></button>
+      <button class="tab" data-tab="insights">💡 인사이트 <span id="insCount"></span></button>
     </nav>
     <div class="spacer"></div>
     <button class="btn" id="btnSettings">⚙️ 설정</button>
@@ -232,7 +269,34 @@ dialog label{display:block;font-size:15px;color:var(--sub);margin:14px 0 6px}
     </div>
     <div class="grid" id="sGrid" style="margin-top:16px"></div>
   </section>
+
+  <!-- 탭 4: 오늘의 리포트 (매일 08:00 스냅샷 기준) -->
+  <section id="tab-report" hidden>
+    <div id="rBody"><div class="empty">리포트 불러오는 중…</div></div>
+  </section>
+
+  <!-- 탭 5: 인사이트 (고른 영상만 Claude가 분석) -->
+  <section id="tab-insights" hidden>
+    <div class="panel">
+      <div class="chead">
+        <b>인사이트</b>
+        <span class="cmeta">영상 카드의 <b>+ 선택</b>으로 1~5개를 고르고 아래 버튼을 누르면, Claude가 왜 터졌는지와 열정진에 가져올 점을 정리해요. 결과는 팀 전체가 같이 봐요.</span>
+      </div>
+      <div class="status" id="iStatus"></div>
+    </div>
+    <div id="iList"></div>
+  </section>
 </main>
+
+<div class="selbar" id="selBar" hidden>
+  <div class="selin">
+    <span id="selTxt"></span>
+    <span class="spacer"></span>
+    <button class="btn" id="selClear">선택 해제</button>
+    <button class="btn primary" id="selGo">💡 인사이트 찾기</button>
+    <div class="status" id="selStatus"></div>
+  </div>
+</div>
 
 <dialog id="dlg">
   <h3 style="margin:0">설정</h3>
@@ -299,7 +363,8 @@ const SB_KEY = 'sb_publishable_UhWRqFkHZJ-BTQd2qS1NJQ_9zG7myED';
 
 const $ = s => document.querySelector(s);
 // team: 팀 공용 목록을 쓰는 중인지(DB에 닿지 않으면 이 브라우저 목록으로 동작), delta: 영상별 하루 증가량, saved: 보관함
-const state = { channels: {}, board: [], failed: {}, team: false, delta: {}, snapDay: '', saved: {} };
+// sel: 인사이트용으로 고른 영상(id → 근거 데이터), report: 오늘의 리포트, insights: 팀 인사이트 기록
+const state = { channels: {}, board: [], failed: {}, team: false, delta: {}, snapDay: '', saved: {}, sel: {}, report: null, insights: [] };
 
 async function sb(path, { method = 'GET', body, prefer, range } = {}) {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
@@ -323,6 +388,7 @@ const ymd = iso => iso.slice(0, 10).replace(/-/g, '.');
 const durSec = iso => { const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso || '') || []; return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0); };
 const durTxt = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
 const thumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const idOk = id => /^[\w-]{11}$/.test(id) ? id : '';
 const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
 
@@ -550,7 +616,7 @@ function renderSaved() {
         <div class="cmeta">${esc(r.channel_title || '')}${r.score ? `, 보관할 때 <span class="score s${tier(+r.score)}">${fmtScore(+r.score)}x</span>` : ''}</div>
         <div class="cmeta">${esc(r.saved_by)} 님이 ${ymd(r.created_at)}에 보관${state.delta[id] ? `, 어제보다 <span class="delta">+${fmt(state.delta[id].d)}</span>` : ''}</div>
         <textarea class="snote" data-note="${esc(r.video_id)}" maxlength="1000" placeholder="왜 저장했는지, 열정진에 어떻게 쓸지 메모">${esc(r.note || '')}</textarea>
-        <div class="crow"><span class="cmeta" data-noteok="${esc(r.video_id)}"></span><button class="linkbtn" data-unsave="${esc(r.video_id)}">보관함에서 빼기</button></div>
+        <div class="crow"><span class="left">${id ? pickBtn(id) : ''}<span class="cmeta" data-noteok="${esc(r.video_id)}"></span></span><button class="linkbtn" data-unsave="${esc(r.video_id)}">보관함에서 빼기</button></div>
       </div>
     </article>`;
   }).join('');
@@ -703,7 +769,7 @@ function renderBoard() {
         ${r.delta ? `<div class="cmeta">하루에 <span class="delta">+${fmt(Math.round(r.delta.dd))}</span> 늘었어요</div>` : ''}
         <div class="crow">
           <span class="left"><span class="score s${tier(r.score)}">${fmtScore(r.score)}x</span>
-          <button class="star${state.saved[r.id] ? ' on' : ''}" data-save="${esc(r.id)}">${state.saved[r.id] ? '⭐ 보관됨' : '☆ 보관'}</button></span>
+          <button class="star${state.saved[r.id] ? ' on' : ''}" data-save="${esc(r.id)}">${state.saved[r.id] ? '⭐ 보관됨' : '☆ 보관'}</button>${pickBtn(r.id)}</span>
           <button class="linkbtn" data-boost="${esc(r.ch.handle)}">첫 부스트 →</button>
         </div>
       </div>
@@ -882,14 +948,209 @@ function drawChart(r) {
   svg.addEventListener('click', e => { const c = e.target.closest('circle'); if (c) window.open('https://www.youtube.com/watch?v=' + vids[+c.dataset.i].id, '_blank', 'noopener'); });
 }
 
+// ---------- 탭 4: 오늘의 리포트 (DB 함수 daily_report가 매일 08:00 스냅샷으로 계산) ----------
+const reportItems = () => state.report ? [...state.report.new_hits, ...state.report.top_delta, ...state.report.new_uploads] : [];
+
+async function loadReport() {
+  try { state.report = await sb('rpc/daily_report', { method: 'POST', body: {} }); }
+  catch (e) { $('#rBody').innerHTML = `<div class="empty">리포트를 불러오지 못했어요: ${esc(e.message)}</div>`; return; }
+  if (!$('#tab-report').hidden) renderReport();
+}
+
+function reportCard(it) {
+  const change = it.prev_score != null ? `어제 ${it.prev_score}x → 오늘 ${it.score}x` : '새로 잡힌 영상';
+  return `<article class="card">
+    <a class="thumb" href="https://www.youtube.com/watch?v=${idOk(it.id)}" target="_blank" rel="noopener">
+      <img loading="lazy" src="${thumb(idOk(it.id))}" alt=""><span class="dur">${it.is_short ? '쇼츠 ' : ''}${durTxt(it.duration)}</span></a>
+    <div class="cbody">
+      <div class="ctitle" title="${esc(it.title)}">${esc(it.title)}</div>
+      <div class="cmeta">${esc(it.channel)}, ${ago(it.published_at)}</div>
+      <div class="cmeta">조회 ${fmt(+it.views)}, 평소 ${fmt(+it.base)}, ${change}</div>
+      ${it.delta != null ? `<div class="cmeta">하루에 <span class="delta">+${fmt(+it.delta)}</span> 늘었어요</div>` : ''}
+      <div class="crow"><span class="left"><span class="score s${tier(+it.score)}">${fmtScore(+it.score)}x</span>${pickBtn(it.id)}</span>
+        <button class="linkbtn" data-boost="${esc(it.handle)}">첫 부스트 →</button></div>
+    </div></article>`;
+}
+
+function renderReport() {
+  const R = state.report, box = $('#rBody');
+  if (!R) return;
+  const run = R.run || {}, errs = run.errors || [];
+  const day = s => s ? s.replace(/-/g, '.') : '';
+  const runTxt = run.finished_at
+    ? `${new Date(run.finished_at).toLocaleString('ko-KR')}에 자동 수집했어요. 채널 ${run.channels}개, 영상 ${fmt(run.videos)}개, ${errs.length ? `오류 ${errs.length}건: ${errs.join(', ')}` : '오류 없음'}.`
+    : '아직 자동 수집 기록이 없어요.';
+  box.innerHTML = `
+    <div class="panel">
+      <div class="chead"><b>${day(R.day)} 리포트</b><span class="cmeta">${R.prev_day ? `${day(R.prev_day)}과 비교해요.` : '비교할 전날 기록이 아직 없어요.'} 매일 오전 8시 기록 기준이에요.</span>
+        <span class="spacer"></span><button class="btn" id="rCopy">보고 문구 복사</button></div>
+      <div class="status${errs.length ? ' err' : ''}">${esc(runTxt)}</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${R.new_hits.length}</b><span>새로 터진 영상</span></div>
+      <div class="stat"><b>${R.hits_30d}</b><span>최근 30일 터진 영상 (3x+)</span></div>
+      <div class="stat"><b>${R.new_uploads.length}</b><span>새 업로드</span></div>
+      <div class="stat"><b>${R.channels}</b><span>감시 채널</span></div>
+    </div>
+    <h2>🔥 새로 터진 영상</h2>
+    <p class="note" style="margin-top:0">최근 30일 영상 중 오늘 처음 3x를 넘은 영상이에요(어제는 3x 미만이었거나 새로 올라온 영상).</p>
+    ${R.new_hits.length ? `<div class="grid">${R.new_hits.map(reportCard).join('')}</div>` : '<div class="panel empty">오늘 새로 터진 영상은 없어요.</div>'}
+    <h2>📈 하루 동안 가장 많이 늘어난 영상</h2>
+    ${R.top_delta.length ? `<div class="grid">${R.top_delta.map(reportCard).join('')}</div>` : '<div class="panel empty">하루 증가량은 기록이 이틀 이상 쌓이면 보여요.</div>'}
+    <h2>🆕 새 업로드 ${R.new_uploads.length}개</h2>
+    <div class="panel">${R.new_uploads.length ? `<ul class="ulist">${R.new_uploads.map(it => `<li><img loading="lazy" src="${thumb(idOk(it.id))}" alt="">
+      <div><a href="https://www.youtube.com/watch?v=${idOk(it.id)}" target="_blank" rel="noopener"><b>${esc(it.title)}</b></a><div class="cmeta">${esc(it.channel)}, ${ago(it.published_at)}, 조회 ${fmt(+it.views)}</div></div>
+      <span class="spacer"></span>${pickBtn(it.id)}</li>`).join('')}</ul>` : '<div class="empty">어제 이후 올라온 영상이 없어요.</div>'}</div>`;
+}
+
+// 노션이나 메신저에 붙여 넣을 짧은 보고
+function reportText() {
+  const R = state.report, day = R.day.replace(/-/g, '.').slice(5);
+  const line = (it, i, tail) => `${i + 1}. ${it.title} (${it.channel}) ${tail}`;
+  return [`[터진영상 레이더] ${day} 리포트`,
+    `새로 터진 영상 ${R.new_hits.length}개`, ...R.new_hits.slice(0, 5).map((it, i) => line(it, i, `${it.score}x, 조회 ${fmt(+it.views)}`)),
+    '', '하루 증가량 상위 5', ...R.top_delta.slice(0, 5).map((it, i) => line(it, i, `+${fmt(+it.delta)}`)),
+    '', `새 업로드 ${R.new_uploads.length}개, 최근 30일 터진 영상 ${R.hits_30d}개`,
+    `👉 ${location.origin.startsWith('http') && !/localhost|127\.0\.0\.1/.test(location.host) ? location.origin + location.pathname : 'https://soo-driven.github.io/yt-radar/'}`].join('\n');
+}
+
+async function copyText(text, btn) {
+  const old = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = '✓ 복사했어요'; }
+  catch { prompt('아래 내용을 복사해 주세요', text); }
+  setTimeout(() => btn.textContent = old, 2000);
+}
+
+// ---------- 인사이트: 고른 영상만 Claude가 "왜 터졌나" 분석 (Edge Function insight) ----------
+const MAX_PICK = 5;
+const FN_URL = `${SB_URL}/functions/v1/insight`;
+const pickBtn = id => `<button class="pick${state.sel[id] ? ' on' : ''}" data-pick="${esc(id)}">${state.sel[id] ? '✓ 선택됨' : '+ 선택'}</button>`;
+
+// 같은 채널·같은 종류 직전 10개(평소 영상)를 근거로 같이 보낸다. 페이지에 없는 영상은 리포트·보관함 값만
+function pickCtx(id) {
+  for (const ch of Object.values(state.channels)) {
+    const v = ch.videos.find(x => x.id === id);
+    if (!v) continue;
+    const same = ch.videos.filter(x => x.s === v.s), i = same.indexOf(v);
+    const prev = same.slice(Math.max(0, i - BASE_N), i);
+    const base = prev.length >= 3 ? mean(prev.map(x => x.v)) : 0;
+    return { title: v.t, channel: ch.title, score: base ? Math.round(v.v / base * 10) / 10 : null, base: Math.round(base), peers: prev.map(x => ({ t: x.t, v: x.v })) };
+  }
+  const r = reportItems().find(x => x.id === id), s = state.saved[id];
+  if (r) return { title: r.title, channel: r.channel, score: r.score, base: r.base };
+  if (s) return { title: s.title, channel: s.channel_title, score: s.score };
+  return {};
+}
+
+function togglePick(id) {
+  if (state.sel[id]) delete state.sel[id];
+  else if (Object.keys(state.sel).length >= MAX_PICK) { $('#selStatus').className = 'status err'; $('#selStatus').textContent = `한 번에 ${MAX_PICK}개까지 고를 수 있어요.`; return; }
+  else state.sel[id] = pickCtx(id);
+  $('#selStatus').textContent = '';
+  refreshPicks();
+}
+
+function refreshPicks() {
+  document.querySelectorAll('[data-pick]').forEach(b => {
+    const on = !!state.sel[b.dataset.pick];
+    b.classList.toggle('on', on); b.textContent = on ? '✓ 선택됨' : '+ 선택';
+  });
+  const n = Object.keys(state.sel).length;
+  $('#selBar').hidden = !n && !$('#selStatus').textContent;
+  document.body.classList.toggle('has-sel', !$('#selBar').hidden);
+  $('#selTxt').textContent = n ? `영상 ${n}개 골랐어요 (최대 ${MAX_PICK}개)` : '';
+  $('#selGo').disabled = !n; $('#selClear').hidden = !n;
+}
+
+// API 키가 없는 동안에는 서버 분석 대신, 고른 영상을 Claude Code 세션에 붙여 넣을 요청 문구로 복사한다
+async function checkInsightKey() {
+  try {
+    const r = await fetch(FN_URL, { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' });
+    const j = await r.json().catch(() => ({}));
+    state.noKey = j.code === 'no_key';
+  } catch { state.noKey = false; }
+  $('#selGo').textContent = state.noKey ? '📋 Claude에게 요청 복사' : '💡 인사이트 찾기';
+}
+
+function requestText() {
+  const ids = Object.keys(state.sel), by = store.get('myName', '') || '익명';
+  return [`[터진영상 레이더] 인사이트 요청 (${by})`,
+    `아래 영상 ${ids.length}개가 왜 터졌는지 분석해서 💡 인사이트 탭에 올려줘.`,
+    ...ids.map((id, i) => { const c = state.sel[id]; return `${i + 1}. ${c.title || ''} | ${c.channel || ''}${c.score ? ` | ${c.score}x` : ''} | https://youtu.be/${id}`; }),
+    `요청 데이터: ${JSON.stringify({ ids, ctx: state.sel, by })}`].join('\n');
+}
+
+async function runInsight() {
+  const ids = Object.keys(state.sel);
+  if (!ids.length) return;
+  const st = $('#selStatus'), go = $('#selGo');
+  if (state.noKey) {
+    await copyText(requestText(), go);
+    st.className = 'status';
+    st.textContent = '요청 문구를 복사했어요. Claude Code의 [영상 제작 툴] 세션에 붙여 넣으면 분석해서 💡 인사이트 탭에 올려줘요.';
+    return;
+  }
+  go.disabled = true; st.className = 'status';
+  st.textContent = `Claude가 영상 ${ids.length}개의 제목, 썸네일, 설명, 인기 댓글을 보고 있어요. 30초~1분쯤 걸려요…`;
+  try {
+    const r = await fetch(FN_URL, { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, ctx: state.sel, by: store.get('myName', '') || '익명' }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.code === 'no_key') { state.noKey = true; go.disabled = false; return runInsight(); }
+    if (!r.ok) throw new Error(j.error || `오류 ${r.status}`);
+    state.insights.unshift(j); state.sel = {}; st.textContent = '';
+    $('#insCount').textContent = state.insights.length;
+    showTab('insights');
+  } catch (e) { st.className = 'status err'; st.textContent = '인사이트를 만들지 못했어요: ' + e.message; }
+  go.disabled = false;
+  refreshPicks();
+}
+
+async function loadInsights() {
+  try { state.insights = await sb('insights?select=*&order=created_at.desc&limit=50'); }
+  catch (e) { $('#iStatus').textContent = '인사이트를 불러오지 못했어요: ' + e.message; }
+  $('#insCount').textContent = state.insights.length || '';
+  if (!$('#tab-insights').hidden) renderInsights();
+}
+
+function renderInsights() {
+  const box = $('#iList');
+  if (!state.insights.length) { box.innerHTML = '<div class="empty">아직 인사이트가 없어요. 보드나 리포트의 영상 카드에서 <b>+ 선택</b>을 눌러 1~5개를 고르고, 아래 버튼을 눌러 보세요.</div>'; return; }
+  box.innerHTML = state.insights.map(row => {
+    const r = row.result || {}, vt = Object.fromEntries((row.videos || []).map(v => [v.id, v]));
+    const li = (arr, a, b) => (arr || []).map(x => `<li><b>${esc(x[a])}</b><br><span class="cmeta">${esc(x[b])}</span></li>`).join('');
+    return `<article class="panel ins">
+      <div class="cmeta">${esc(row.requested_by)} 님이 ${new Date(row.created_at).toLocaleString('ko-KR')}에 요청</div>
+      <h3>${esc(r.headline || '')}</h3>
+      <div class="ivids">${(row.videos || []).map(v => `<a href="https://www.youtube.com/watch?v=${idOk(v.id)}" target="_blank" rel="noopener" title="${esc(v.title)}">
+        <img loading="lazy" src="${thumb(idOk(v.id))}" alt=""><span>${esc(v.title)}</span><span>${esc(v.channel)}${v.score ? `, ${fmtScore(+v.score)}x` : ''}</span></a>`).join('')}</div>
+      <h4>공통 패턴</h4><ul>${li(r.common, 'pattern', 'evidence')}</ul>
+      <h4>열정진에 가져올 것</h4><ul>${li(r.apply, 'idea', 'brand_fit')}</ul>
+      <details><summary>영상별 분석 ${(r.videos || []).length}개</summary>${(r.videos || []).map(v => `<div class="ivid"><b>${esc(vt[v.id]?.title || v.id)}</b><dl>
+        <dt>다른 점</dt><dd>${esc(v.why)}</dd><dt>제목</dt><dd>${esc(v.title_hook)}</dd><dt>썸네일</dt><dd>${esc(v.thumbnail)}</dd>
+        <dt>시점</dt><dd>${esc(v.timing)}</dd><dt>시청자 반응</dt><dd>${esc(v.audience)}</dd></dl></div>`).join('')}</details>
+      ${r.caveats ? `<p class="note">한계: ${esc(r.caveats)}</p>` : ''}
+      <div class="row" style="justify-content:flex-start"><button class="linkbtn" data-copyins="${row.id}">노션용으로 복사</button></div>
+    </article>`;
+  }).join('');
+}
+
+function insightText(row) {
+  const r = row.result || {};
+  return [`## 💡 ${r.headline}`, ...(row.videos || []).map(v => `- [${v.title}](https://www.youtube.com/watch?v=${v.id}) (${v.channel}${v.score ? `, ${fmtScore(+v.score)}x` : ''})`),
+    '', '### 공통 패턴', ...(r.common || []).map(c => `- **${c.pattern}**: ${c.evidence}`),
+    '', '### 열정진에 가져올 것', ...(r.apply || []).map(a => `- **${a.idea}**: ${a.brand_fit}`),
+    ...(r.caveats ? ['', `한계: ${r.caveats}`] : [])].join('\n');
+}
+
 // ---------- 화면 연결 ----------
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-  $('#tab-board').hidden = name !== 'board';
-  $('#tab-boost').hidden = name !== 'boost';
-  $('#tab-saved').hidden = name !== 'saved';
+  ['board', 'report', 'boost', 'saved', 'insights'].forEach(t => $('#tab-' + t).hidden = name !== t);
   if (name === 'boost') fillChannelSelect();
   if (name === 'saved') renderSaved();
+  if (name === 'report') renderReport();
+  if (name === 'insights') renderInsights();
   store.set('tab', name);
 }
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -923,6 +1184,18 @@ $('#sGrid').addEventListener('input', e => {
 });
 $('#sGrid').addEventListener('focusout', e => { const t = e.target.closest('[data-note]'); if (t) flushNote(t); });
 $('#btnAnalyze').onclick = runBoost;
+// + 선택 버튼은 보드·리포트·보관함 어디에 있든 같은 동작
+document.addEventListener('click', e => { const p = e.target.closest('[data-pick]'); if (p) togglePick(p.dataset.pick); });
+$('#selGo').onclick = runInsight;
+$('#selClear').onclick = () => { state.sel = {}; $('#selStatus').textContent = ''; refreshPicks(); };
+$('#rBody').onclick = e => {
+  if (e.target.closest('#rCopy')) { copyText(reportText(), e.target.closest('#rCopy')); return; }
+  const b = e.target.closest('[data-boost]'); if (!b) return; showTab('boost'); $('#fChannel').value = b.dataset.boost; $('#fHandle').value = ''; runBoost();
+};
+$('#iList').onclick = e => {
+  const b = e.target.closest('[data-copyins]'); if (!b) return;
+  const row = state.insights.find(x => String(x.id) === b.dataset.copyins); if (row) copyText(insightText(row), b);
+};
 ['#fType', '#fThr'].forEach(s => $(s).onchange = () => { const h = $('#fHandle').value.trim() || $('#fChannel').value; const d = store.get('hist', {})[h.startsWith('@') ? h : '@' + h]; if (d) renderBoost(d); });
 
 const applyTheme = t => { if (t === 'dark') document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme; };
@@ -944,7 +1217,7 @@ setOpen(store.get('cOpen', true));
 // 시작: 팀 목록을 먼저 받고(실패하면 이 브라우저 목록), 증가량과 보관함은 같이 받아 도착하면 다시 그린다
 const opts = store.get('bOpts', null); if (opts) ['#bPeriod', '#bType', '#bMin', '#bSort', '#bBase'].forEach((k, i) => opts[i] && ($(k).value = opts[i]));
 showTab(store.get('tab', 'board'));
-const extras = Promise.all([loadDelta(), loadSaved()]);
+const extras = Promise.all([loadDelta(), loadSaved(), loadReport(), loadInsights(), checkInsightKey()]);
 loadTeamChannels().then(() => { renderChannelPanel(); return refreshBoard(false); })
   .then(() => extras).then(() => { renderBoard(); if (!$('#tab-saved').hidden) renderSaved(); });
 })();
