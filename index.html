@@ -1174,18 +1174,24 @@ async function analyzeLink(e) {
     if (!vi) throw new Error('영상을 찾지 못했어요(비공개이거나 삭제된 영상일 수 있어요)');
     const ch = await getChannel(vi.snippet.channelId);
     const ids = []; let token = '', at = -1;
-    do {
+    const more = async () => {
       const pl = await yt('playlistItems', { part: 'contentDetails', playlistId: ch.uploads, maxResults: 50, ...(token && { pageToken: token }) });
       pl.items.forEach(it => ids.push(it.contentDetails.videoId));
       token = pl.nextPageToken || '';
-      at = ids.indexOf(p.id);
       status.textContent = `채널 업로드 목록 확인 중… ${ids.length}개`;
-    } while (token && (at < 0 || ids.length < at + 61) && ids.length < LINK_MAX_IDS);
+    };
+    do { await more(); at = ids.indexOf(p.id); } while (token && at < 0 && ids.length < LINK_MAX_IDS);
     if (at < 0) throw new Error(`이 채널의 최근 ${ids.length}개 업로드 안에서 영상을 찾지 못했어요. 아주 오래된 영상이거나 업로드 목록에 없는 영상(멤버십 전용 등)일 수 있어요.`);
-    const slice = ids.slice(at, at + 61), vids = [];
-    for (let i = 0; i < slice.length; i += 50) {
-      const d = await yt('videos', { part: 'snippet,statistics,contentDetails', id: slice.slice(i, i + 50).join(',') });
+    // 그 영상부터 50개씩 상세를 받으며, 같은 종류(롱폼/쇼츠) 앞 영상이 10개 모이거나 목록이 끝날 때까지 거슬러 올라간다
+    const vids = []; let me0 = null;
+    for (let i = at; i < ids.length || token; i += 50) {
+      while (ids.length < i + 50 && token && ids.length < LINK_MAX_IDS) await more();
+      const chunk = ids.slice(i, i + 50); if (!chunk.length) break;
+      const d = await yt('videos', { part: 'snippet,statistics,contentDetails', id: chunk.join(',') });
       d.items.forEach(v => { const s = durSec(v.contentDetails.duration); vids.push({ id: v.id, t: v.snippet.title, p: v.snippet.publishedAt, v: +v.statistics.viewCount || 0, d: s, s: s > 0 && s <= SHORT_MAX_SEC, live: v.snippet.liveBroadcastContent !== 'none' }); });
+      me0 = me0 || vids.find(v => v.id === p.id);
+      if (me0 && vids.filter(v => v.s === me0.s && !v.live && v.id !== me0.id).length >= BASE_N) break;
+      if (ids.length >= LINK_MAX_IDS) break;
     }
     const list = vids.filter(v => !v.live || v.id === p.id).sort((a, b) => a.p < b.p ? -1 : 1);
     const me = scoreVideos(list, 'mean').find(v => v.id === p.id);
