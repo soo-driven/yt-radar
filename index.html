@@ -165,6 +165,7 @@ body.has-sel main{padding-bottom:120px}
 .ivid dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 0;font-size:15px}
 .ivid dt{color:var(--sub);font-weight:700;white-space:nowrap}
 .ivid dd{margin:0}
+@media (max-width:700px){.lgrid{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -174,6 +175,7 @@ body.has-sel main{padding-bottom:120px}
     <nav class="tabs">
       <button class="tab on" data-tab="board">터진 영상 보드</button>
       <button class="tab" data-tab="report">📋 오늘의 리포트</button>
+      <button class="tab" data-tab="link">🔗 링크 분석</button>
       <button class="tab" data-tab="boost">첫 부스트 찾기</button>
       <button class="tab" data-tab="saved">⭐ 보관함 <span id="savedCount"></span></button>
       <button class="tab" data-tab="insights">💡 인사이트 <span id="insCount"></span></button>
@@ -231,6 +233,19 @@ body.has-sel main{padding-bottom:120px}
     <div class="chips" id="bChips"></div>
     <div class="grid" id="bGrid"></div>
     <p class="note">점수 = 영상 조회수 ÷ 같은 채널, 같은 종류(롱폼/쇼츠)의 직전 업로드 10개 조회수. 쇼츠는 길이 3분 이하로 추정해요. 조회수는 지금 누적 값이라, 올라온 지 3일이 안 된 영상은 점수가 낮게 나올 수 있어요.</p>
+  </section>
+
+  <!-- 탭: 링크 분석 (영상 하나를 그 채널 평소와 비교) -->
+  <section id="tab-link" hidden>
+    <div class="panel">
+      <form class="cadd" id="lForm">
+        <input id="lInput" placeholder="유튜브 영상 링크 붙여넣기 (예: https://youtu.be/…)" autocomplete="off" aria-label="분석할 영상 링크">
+        <button class="btn primary" type="submit">분석</button>
+      </form>
+      <div class="status" id="lStatus"></div>
+    </div>
+    <div id="lResult" style="margin-top:16px"></div>
+    <p class="note">배수 = 이 영상 조회수 ÷ 같은 채널, 같은 종류(롱폼/쇼츠)의 바로 앞 업로드 10개 평균 조회수. 감시 채널이 아니어도 돼요. 올라온 지 3일이 안 된 영상은 아직 조회수가 쌓이는 중이라 배수가 낮게 나올 수 있어요.</p>
   </section>
 
   <!-- 탭 2: 첫 부스트 찾기 -->
@@ -456,7 +471,7 @@ async function getChannel(handle) {
   const c = j.items?.[0];
   if (!c) throw new Error(`${handle} 채널을 찾지 못했어요`);
   return {
-    id: c.id, handle, title: c.snippet.title,
+    id: c.id, handle, title: c.snippet.title, custom: c.snippet.customUrl || '',
     avatar: c.snippet.thumbnails?.default?.url || '',
     subs: +c.statistics.subscriberCount || 0, videoCount: +c.statistics.videoCount || 0,
     uploads: c.contentDetails.relatedPlaylists.uploads,
@@ -1143,10 +1158,68 @@ function insightText(row) {
     ...(r.caveats ? ['', `한계: ${r.caveats}`] : [])].join('\n');
 }
 
+// ---------- 링크 분석: 영상 하나 → 채널 평소 대비 배수 ----------
+// 업로드 목록(최신 → 오래된)을 넘기다 그 영상을 찾으면, 그보다 오래된 영상 60개까지만 상세를 받아 같은 종류 직전 10개와 비교한다
+const LINK_MAX_IDS = 2000; // 이보다 오래된 영상은 포기(할당량 보호)
+async function analyzeLink(e) {
+  e.preventDefault();
+  const status = $('#lStatus'), out = $('#lResult');
+  const p = parseInput($('#lInput').value);
+  status.className = 'status'; out.innerHTML = '';
+  if (!p || p.kind !== 'video') { status.className = 'status err'; status.textContent = '영상 링크를 넣어 주세요 (채널 주소가 아니라 영상 하나의 주소).'; return; }
+  try {
+    status.textContent = '영상 정보 불러오는 중…';
+    const j = await yt('videos', { part: 'snippet,statistics,contentDetails', id: p.id });
+    const vi = j.items?.[0];
+    if (!vi) throw new Error('영상을 찾지 못했어요(비공개이거나 삭제된 영상일 수 있어요)');
+    const ch = await getChannel(vi.snippet.channelId);
+    const ids = []; let token = '', at = -1;
+    do {
+      const pl = await yt('playlistItems', { part: 'contentDetails', playlistId: ch.uploads, maxResults: 50, ...(token && { pageToken: token }) });
+      pl.items.forEach(it => ids.push(it.contentDetails.videoId));
+      token = pl.nextPageToken || '';
+      at = ids.indexOf(p.id);
+      status.textContent = `채널 업로드 목록 확인 중… ${ids.length}개`;
+    } while (token && (at < 0 || ids.length < at + 61) && ids.length < LINK_MAX_IDS);
+    if (at < 0) throw new Error(`이 채널의 최근 ${ids.length}개 업로드 안에서 영상을 찾지 못했어요. 아주 오래된 영상이거나 업로드 목록에 없는 영상(멤버십 전용 등)일 수 있어요.`);
+    const slice = ids.slice(at, at + 61), vids = [];
+    for (let i = 0; i < slice.length; i += 50) {
+      const d = await yt('videos', { part: 'snippet,statistics,contentDetails', id: slice.slice(i, i + 50).join(',') });
+      d.items.forEach(v => { const s = durSec(v.contentDetails.duration); vids.push({ id: v.id, t: v.snippet.title, p: v.snippet.publishedAt, v: +v.statistics.viewCount || 0, d: s, s: s > 0 && s <= SHORT_MAX_SEC, live: v.snippet.liveBroadcastContent !== 'none' }); });
+    }
+    const list = vids.filter(v => !v.live || v.id === p.id).sort((a, b) => a.p < b.p ? -1 : 1);
+    const me = scoreVideos(list, 'mean').find(v => v.id === p.id);
+    if (!me) throw new Error('영상 상세를 받지 못했어요');
+    const peers = list.filter(v => v.s === me.s && v.p < me.p).slice(-BASE_N).reverse();
+    const sn = vi.snippet, img = sn.thumbnails?.maxres?.url || sn.thumbnails?.high?.url || thumb(me.id);
+    status.textContent = '';
+    out.innerHTML = `
+      <div class="panel ivid">
+        <div style="display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:20px;align-items:start" class="lgrid">
+          <a href="https://www.youtube.com/watch?v=${me.id}" target="_blank" rel="noopener"><img src="${esc(img)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block"></a>
+          <div>
+            <div class="ctitle" style="font-size:19px">${esc(me.t)}</div>
+            <div style="margin:10px 0"><span class="score s${me.base ? tier(me.score) : 1}" style="font-size:20px">${me.base ? fmtScore(me.score) + 'x' : '계산 불가'}</span></div>
+            <dl>
+              <dt>채널</dt><dd>${esc(ch.title)} (구독 ${fmt(ch.subs)})</dd>
+              <dt>조회수</dt><dd>${fmt(me.v)}</dd>
+              <dt>평소 조회수</dt><dd>${me.base ? fmt(Math.round(me.base)) + ` (같은 ${me.s ? '쇼츠' : '롱폼'} 직전 ${me.n}개 평균)` : '같은 종류 직전 영상이 3개 미만이라 비교할 수 없어요'}</dd>
+              <dt>길이</dt><dd>${me.s ? '쇼츠 ' : '롱폼 '}${durTxt(me.d)}</dd>
+              <dt>올린 날</dt><dd>${ymd(me.p)} (${ago(me.p)}${hoursSince(me.p) < 72 ? ', 아직 자라는 중' : ''})</dd>
+            </dl>
+            ${ch.custom ? `<div style="margin-top:12px"><button class="linkbtn" data-lboost="${esc(ch.custom.startsWith('@') ? ch.custom : '@' + ch.custom)}">이 채널 첫 부스트 →</button></div>` : ''}
+          </div>
+        </div>
+        ${peers.length ? `<details style="margin-top:16px"><summary>비교한 직전 영상 ${peers.length}개</summary>
+          <ul class="ulist">${peers.map(v => `<li><img loading="lazy" src="${thumb(v.id)}" alt=""><span><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a><br><small>조회 ${fmt(v.v)}, ${ymd(v.p)}</small></span></li>`).join('')}</ul></details>` : ''}
+      </div>`;
+  } catch (err) { status.className = 'status err'; status.textContent = err.message === 'NO_KEY' ? '⚙️ 설정에서 YouTube API 키를 먼저 넣어 주세요.' : err.message; }
+}
+
 // ---------- 화면 연결 ----------
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-  ['board', 'report', 'boost', 'saved', 'insights'].forEach(t => $('#tab-' + t).hidden = name !== t);
+  ['board', 'report', 'link', 'boost', 'saved', 'insights'].forEach(t => $('#tab-' + t).hidden = name !== t);
   if (name === 'boost') fillChannelSelect();
   if (name === 'saved') renderSaved();
   if (name === 'report') renderReport();
@@ -1184,6 +1257,8 @@ $('#sGrid').addEventListener('input', e => {
 });
 $('#sGrid').addEventListener('focusout', e => { const t = e.target.closest('[data-note]'); if (t) flushNote(t); });
 $('#btnAnalyze').onclick = runBoost;
+$('#lForm').onsubmit = analyzeLink;
+$('#lResult').onclick = e => { const b = e.target.closest('[data-lboost]'); if (!b) return; showTab('boost'); $('#fHandle').value = b.dataset.lboost; runBoost(); };
 // + 선택 버튼은 보드·리포트·보관함 어디에 있든 같은 동작
 document.addEventListener('click', e => { const p = e.target.closest('[data-pick]'); if (p) togglePick(p.dataset.pick); });
 $('#selGo').onclick = runInsight;
