@@ -185,6 +185,10 @@ body.has-sel main{padding-bottom:120px}
 .hlist li{cursor:pointer;padding:8px;border-radius:10px;align-items:flex-start}
 .hlist li:hover{background:var(--bg)}
 .hlist .hsum{font-size:14px;color:var(--sub);margin-top:2px}
+.hlist li{position:relative;padding-right:40px}
+.hdel{position:absolute;right:8px;top:8px;font-size:16px;opacity:.5}
+.hlist li:hover .hdel,.hdel:focus{opacity:1}
+.linkbtn.del{color:var(--sub)}
 @media (max-width:700px){.lgrid{grid-template-columns:1fr!important}}
 </style>
 </head>
@@ -1170,7 +1174,7 @@ function renderInsights() {
         <dt>다른 점</dt><dd>${esc(v.why)}</dd><dt>제목</dt><dd>${esc(v.title_hook)}</dd><dt>썸네일</dt><dd>${esc(v.thumbnail)}</dd>
         <dt>시점</dt><dd>${esc(v.timing)}</dd><dt>시청자 반응</dt><dd>${esc(v.audience)}</dd></dl></div>`).join('')}</details>
       ${r.caveats ? `<p class="note">한계: ${esc(r.caveats)}</p>` : ''}
-      <div class="row" style="justify-content:flex-start"><button class="linkbtn" data-copyins="${row.id}">노션용으로 복사</button></div>
+      <div class="row" style="justify-content:flex-start;gap:16px"><button class="linkbtn" data-copyins="${row.id}">노션용으로 복사</button><button class="linkbtn del" data-delins="${row.id}">🗑 삭제</button></div>
     </article>`;
   }).join('');
 }
@@ -1301,7 +1305,7 @@ function renderBrief(row) {
     </section></div>
     <div class="row" style="justify-content:space-between;margin-top:10px;gap:12px;flex-wrap:wrap">
       <span class="cmeta">${r.video_seen === false ? '⚠️ 영상을 직접 못 보고 제목·설명·댓글로만 추측했어요. ' : ''}${r.caveats ? esc(r.caveats) + ' · ' : ''}${esc(row.model || '')} · ${new Date(row.created_at).toLocaleString('ko-KR')} 분석</span>
-      <span style="display:flex;gap:16px"><button class="linkbtn" data-copybrief>노션용으로 복사</button><button class="linkbtn" data-rebrief="${esc(row.video_id)}">다시 분석</button></span>
+      <span style="display:flex;gap:16px"><button class="linkbtn" data-copybrief>노션용으로 복사</button><button class="linkbtn" data-rebrief="${esc(row.video_id)}">다시 분석</button><button class="linkbtn del" data-delbrief="${esc(row.video_id)}">🗑 기록 삭제</button></span>
     </div>`;
 }
 
@@ -1332,9 +1336,19 @@ async function loadBriefHistory() {
   } catch { /* 제목을 못 받아도 요약으로 목록은 보여 준다 */ }
   box.innerHTML = rows.map(r => {
     const id = idOk(r.video_id), m = histTitles[id] || {};
-    return `<li data-hist="${id}"><img loading="lazy" src="${thumb(id)}" alt=""><span><b>${esc(m.t || id)}</b><br>
+    return `<li data-hist="${id}"><img loading="lazy" src="${thumb(id)}" alt=""><button class="linkbtn del hdel" data-delbrief="${id}" title="이 분석 기록 지우기">🗑</button><span><b>${esc(m.t || id)}</b><br>
       <small>${esc(m.c || '')}${m.c ? ' · ' : ''}${ymd(r.created_at)} 분석</small><div class="hsum">${esc(r.one_line || '')}</div></span></li>`;
   }).join('');
+}
+
+// 분석 기록 지우기: 팀 공용이라 모두에게서 사라진다. 지금 화면에 열린 영상이면 카드도 치운다
+async function deleteBrief(id, btn) {
+  if (!confirm('이 영상의 분석 기록을 지울까요? 팀 모두에게서 사라지고, 다시 보려면 새로 분석해야 해요.')) return;
+  btn.disabled = true;
+  try { await sb(`video_briefs?video_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' }); }
+  catch (err) { btn.disabled = false; alert('지우지 못했어요: ' + err.message); return; }
+  if (briefRow?.video_id === id) { briefRow = null; const b = $('#lBrief'); if (b) b.innerHTML = '<div class="panel ins"><p class="cmeta">🗑 분석 기록을 지웠어요. 다시 보려면 위에서 분석을 누르세요.</p></div>'; }
+  loadBriefHistory();
 }
 
 // ---------- 화면 연결 ----------
@@ -1381,6 +1395,7 @@ $('#sGrid').addEventListener('focusout', e => { const t = e.target.closest('[dat
 $('#btnAnalyze').onclick = runBoost;
 $('#lForm').onsubmit = analyzeLink;
 $('#lHist').onclick = e => {
+  const db = e.target.closest('[data-delbrief]'); if (db) { deleteBrief(db.dataset.delbrief, db); return; }
   const li = e.target.closest('[data-hist]'); if (!li || !li.dataset.hist) return;
   $('#lInput').value = `https://www.youtube.com/watch?v=${li.dataset.hist}`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1388,6 +1403,7 @@ $('#lHist').onclick = e => {
 };
 $('#lResult').onclick = e => {
   const cp = e.target.closest('[data-copybrief]'); if (cp && briefRow) { copyText(briefText(briefRow), cp); return; }
+  const db = e.target.closest('[data-delbrief]'); if (db) { deleteBrief(db.dataset.delbrief, db); return; }
   const rb = e.target.closest('[data-rebrief]'); if (rb) { if (confirm('AI가 영상을 처음부터 다시 봐요. 다시 분석할까요?')) loadBrief(rb.dataset.rebrief, null, true); return; }
   const b = e.target.closest('[data-lboost]'); if (!b) return; showTab('boost'); $('#fHandle').value = b.dataset.lboost; runBoost();
 };
@@ -1399,7 +1415,17 @@ $('#rBody').onclick = e => {
   if (e.target.closest('#rCopy')) { copyText(reportText(), e.target.closest('#rCopy')); return; }
   const b = e.target.closest('[data-boost]'); if (!b) return; showTab('boost'); $('#fChannel').value = b.dataset.boost; $('#fHandle').value = ''; runBoost();
 };
-$('#iList').onclick = e => {
+$('#iList').onclick = async e => {
+  const d = e.target.closest('[data-delins]');
+  if (d) {
+    if (!confirm('이 인사이트를 지울까요? 팀 모두에게서 사라지고 되돌릴 수 없어요.')) return;
+    d.disabled = true;
+    try { await sb(`insights?id=eq.${encodeURIComponent(d.dataset.delins)}`, { method: 'DELETE' }); }
+    catch (err) { d.disabled = false; $('#iStatus').textContent = '⚠️ 지우지 못했어요: ' + err.message; return; }
+    state.insights = state.insights.filter(x => String(x.id) !== d.dataset.delins);
+    $('#insCount').textContent = state.insights.length || '';
+    renderInsights(); return;
+  }
   const b = e.target.closest('[data-copyins]'); if (!b) return;
   const row = state.insights.find(x => String(x.id) === b.dataset.copyins); if (row) copyText(insightText(row), b);
 };
