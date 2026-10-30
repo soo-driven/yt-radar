@@ -165,6 +165,22 @@ body.has-sel main{padding-bottom:120px}
 .ivid dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 0;font-size:15px}
 .ivid dt{color:var(--sub);font-weight:700;white-space:nowrap}
 .ivid dd{margin:0}
+/* 링크 분석: 영상 소개 · 첫 30초 후킹 · 댓글 반응 */
+.bgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.bgrid .ins{margin-top:0}
+.bgrid h4{margin-top:0}
+.bgrid p{margin:8px 0;font-size:15px;line-height:1.6}
+.bgrid ul{font-size:15px;line-height:1.6}
+.blead{font-weight:700}
+.bquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--green);background:var(--green-weak);border-radius:6px;font-size:16px;font-weight:700}
+.bjin{background:var(--bg);border-radius:8px;padding:8px 10px}
+.bflow{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0 0}
+.bflow dt{color:var(--sub);font-weight:700}.bflow dd{margin:0}
+.bbar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:8px}
+.bbar span{display:block;height:100%;background:var(--green)}
+.clist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.5}
+.clike{display:inline-block;min-width:64px;color:var(--sub);font-weight:700;margin-right:6px}
+@media (max-width:900px){.bgrid{grid-template-columns:1fr}}
 @media (max-width:700px){.lgrid{grid-template-columns:1fr!important}}
 </style>
 </head>
@@ -1218,8 +1234,74 @@ async function analyzeLink(e) {
         </div>
         ${peers.length ? `<details style="margin-top:16px"><summary>비교한 직전 영상 ${peers.length}개</summary>
           <ul class="ulist">${peers.map(v => `<li><img loading="lazy" src="${thumb(v.id)}" alt=""><span><a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">${esc(v.t)}</a><br><small>조회 ${fmt(v.v)}, ${ymd(v.p)}</small></span></li>`).join('')}</ul></details>` : ''}
-      </div>`;
+      </div>
+      <div id="lBrief"></div>`;
+    loadBrief(me.id, { title: me.t, channel: ch.title, score: me.base ? fmtScore(me.score) + 'x' : '' });
   } catch (err) { status.className = 'status err'; status.textContent = err.message === 'NO_KEY' ? '⚙️ 설정에서 YouTube API 키를 먼저 넣어 주세요.' : err.message; }
+}
+
+// ---------- 링크 분석: 내용 소개 · 첫 30초 후킹 · 댓글 반응 (Edge Function video-brief, Gemini가 영상을 직접 봄) ----------
+// 같은 영상은 서버에 저장된 결과를 바로 받는다. 키가 없으면 인기 댓글 원문만 온다
+const BRIEF_URL = `${SB_URL}/functions/v1/video-brief`;
+let briefMeta = {}, briefRow = null;
+async function loadBrief(id, meta, refresh = false) {
+  const box = $('#lBrief'); if (!box) return;
+  briefMeta = meta || briefMeta; briefRow = null;
+  box.innerHTML = `<div class="panel ins"><div class="cmeta">🧠 AI가 영상을 보고 있어요. 처음 보는 영상은 30초~1분쯤 걸려요…</div></div>`;
+  try {
+    const r = await fetch(BRIEF_URL, { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ id, refresh }) });
+    const j = await r.json().catch(() => ({}));
+    if ($('#lBrief') !== box) return; // 그사이 다른 링크를 분석했으면 버린다
+    if (j.code === 'no_key' || !r.ok) { box.innerHTML = renderBriefFallback(j, r.ok); return; }
+    briefRow = j; box.innerHTML = renderBrief(j);
+  } catch (e) { box.innerHTML = renderBriefFallback({ error: e.message }, false); }
+}
+
+const commentList = cs => (cs || []).length ? `<ul class="clist">${cs.map(c => `<li><span class="clike">👍 ${fmt(c.likes)}</span>${esc(c.text)}</li>`).join('')}</ul>` : '<p class="cmeta">댓글이 꺼져 있거나 아직 없어요.</p>';
+
+function renderBriefFallback(j, ok) {
+  const msg = j.code === 'no_key' ? 'Gemini 키를 연결하기 전이라 영상 소개와 후킹 분석은 아직 안 돼요. 인기 댓글만 먼저 보여 드려요.' : `AI 분석을 하지 못했어요: ${esc(j.error || '알 수 없는 오류')}`;
+  return `<div class="panel ins"><p class="cmeta">${ok ? 'ℹ️' : '⚠️'} ${msg}</p>
+    ${j.top_comments ? `<h4>💬 인기 댓글 (좋아요 순)</h4>${commentList(j.top_comments)}` : ''}</div>`;
+}
+
+function renderBrief(row) {
+  const r = row.result || {}, s = r.summary || {}, k = r.hook || {}, c = r.comments || {};
+  const ul = a => `<ul>${(a || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  return `<div class="bgrid">
+    <section class="panel ins"><h4>📺 영상 소개</h4>
+      <p class="blead">${esc(s.one_line)}</p>${ul(s.points)}
+      ${(s.flow || []).length ? `<details><summary>영상 흐름 ${s.flow.length}구간</summary><dl class="bflow">${s.flow.map(f => `<dt>${esc(f.time)}</dt><dd>${esc(f.what)}</dd>`).join('')}</dl></details>` : ''}
+    </section>
+    <section class="panel ins"><h4>🎣 첫 30초 후킹</h4>
+      ${k.first_line ? `<blockquote class="bquote">“${esc(k.first_line)}”</blockquote>` : ''}
+      <p>${esc(k.opening)}</p>
+      <p class="cmeta">화면: ${esc(k.visual)}</p>
+      <ul>${(k.techniques || []).map(t => `<li><b>${esc(t.name)}</b><br><span class="cmeta">${esc(t.evidence)}</span></li>`).join('')}</ul>
+      <p><b>왜 붙잡나</b> ${esc(k.why)}</p>
+      <p class="bjin"><b>열정진에 가져오기</b> ${esc(k.for_jin)}</p>
+    </section>
+    <section class="panel ins"><h4>💬 댓글 반응 <span class="cmeta">(인기 댓글 ${r.comment_count ?? 0}개 기준)</span></h4>
+      <p class="blead">${esc(c.mood)}</p>
+      ${c.positive != null ? `<div class="bbar" title="긍정 ${c.positive}%"><span style="width:${Math.max(0, Math.min(100, +c.positive))}%"></span></div><p class="cmeta">긍정 약 ${esc(c.positive)}% (AI 추정)</p>` : ''}
+      <ul>${(c.themes || []).map(t => `<li><b>${esc(t.theme)}</b> <span class="cmeta">· ${esc(t.size)}</span><br><span class="cmeta">“${esc(t.example)}”</span></li>`).join('')}</ul>
+      ${(c.wants || []).length ? `<p><b>더 알고 싶어 하는 것</b></p>${ul(c.wants)}` : ''}
+      <p class="bjin"><b>열정진 기획 힌트</b> ${esc(c.for_jin)}</p>
+      <details><summary>인기 댓글 원문 (좋아요 순)</summary>${commentList(r.top_comments)}</details>
+    </section></div>
+    <div class="row" style="justify-content:space-between;margin-top:10px;gap:12px;flex-wrap:wrap">
+      <span class="cmeta">${r.video_seen === false ? '⚠️ 영상을 직접 못 보고 제목·설명·댓글로만 추측했어요. ' : ''}${r.caveats ? esc(r.caveats) + ' · ' : ''}${esc(row.model || '')} · ${new Date(row.created_at).toLocaleString('ko-KR')} 분석</span>
+      <span style="display:flex;gap:16px"><button class="linkbtn" data-copybrief>노션용으로 복사</button><button class="linkbtn" data-rebrief="${esc(row.video_id)}">다시 분석</button></span>
+    </div>`;
+}
+
+function briefText(row) {
+  const r = row.result || {}, s = r.summary || {}, k = r.hook || {}, c = r.comments || {}, m = briefMeta;
+  return [`## [${m.title || row.video_id}](https://www.youtube.com/watch?v=${row.video_id})`, `${m.channel || ''}${m.score ? ` · 평소 대비 ${m.score}` : ''}`,
+    '', '### 📺 영상 소개', s.one_line, ...(s.points || []).map(x => `- ${x}`),
+    '', '### 🎣 첫 30초 후킹', k.first_line ? `> “${k.first_line}”` : null, k.opening, ...(k.techniques || []).map(t => `- **${t.name}**: ${t.evidence}`), `- 왜 붙잡나: ${k.why}`, `- **열정진에 가져오기**: ${k.for_jin}`,
+    '', '### 💬 댓글 반응', c.mood, ...(c.themes || []).map(t => `- **${t.theme}** (${t.size}): “${t.example}”`), ...(c.wants || []).length ? ['- 더 알고 싶어 하는 것: ' + c.wants.join(' / ')] : [], `- **열정진 기획 힌트**: ${c.for_jin}`,
+  ].filter(x => x != null).join('\n');
 }
 
 // ---------- 화면 연결 ----------
@@ -1264,7 +1346,11 @@ $('#sGrid').addEventListener('input', e => {
 $('#sGrid').addEventListener('focusout', e => { const t = e.target.closest('[data-note]'); if (t) flushNote(t); });
 $('#btnAnalyze').onclick = runBoost;
 $('#lForm').onsubmit = analyzeLink;
-$('#lResult').onclick = e => { const b = e.target.closest('[data-lboost]'); if (!b) return; showTab('boost'); $('#fHandle').value = b.dataset.lboost; runBoost(); };
+$('#lResult').onclick = e => {
+  const cp = e.target.closest('[data-copybrief]'); if (cp && briefRow) { copyText(briefText(briefRow), cp); return; }
+  const rb = e.target.closest('[data-rebrief]'); if (rb) { if (confirm('AI가 영상을 처음부터 다시 봐요. 다시 분석할까요?')) loadBrief(rb.dataset.rebrief, null, true); return; }
+  const b = e.target.closest('[data-lboost]'); if (!b) return; showTab('boost'); $('#fHandle').value = b.dataset.lboost; runBoost();
+};
 // + 선택 버튼은 보드·리포트·보관함 어디에 있든 같은 동작
 document.addEventListener('click', e => { const p = e.target.closest('[data-pick]'); if (p) togglePick(p.dataset.pick); });
 $('#selGo').onclick = runInsight;
