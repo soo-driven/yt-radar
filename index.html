@@ -181,6 +181,10 @@ body.has-sel main{padding-bottom:120px}
 .clist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.5}
 .clike{display:inline-block;min-width:64px;color:var(--sub);font-weight:700;margin-right:6px}
 @media (max-width:900px){.bgrid{grid-template-columns:1fr}}
+.hhead{font-size:17px;margin:0}
+.hlist li{cursor:pointer;padding:8px;border-radius:10px;align-items:flex-start}
+.hlist li:hover{background:var(--bg)}
+.hlist .hsum{font-size:14px;color:var(--sub);margin-top:2px}
 @media (max-width:700px){.lgrid{grid-template-columns:1fr!important}}
 </style>
 </head>
@@ -262,6 +266,11 @@ body.has-sel main{padding-bottom:120px}
     </div>
     <div id="lResult" style="margin-top:16px"></div>
     <p class="note">배수 = 이 영상 조회수 ÷ 같은 채널, 같은 종류(롱폼/쇼츠)의 바로 앞 업로드 10개 평균 조회수. 감시 채널이 아니어도 돼요. 올라온 지 3일이 안 된 영상은 아직 조회수가 쌓이는 중이라 배수가 낮게 나올 수 있어요.</p>
+    <div class="panel" style="margin-top:16px">
+      <h3 class="hhead">🗂 최근 분석한 영상 <span class="cmeta" id="lHistCount"></span></h3>
+      <p class="cmeta" style="margin:4px 0 0">팀이 분석한 영상이 모두 여기 쌓여요. 누르면 다시 열려요(저장된 결과라 바로 떠요).</p>
+      <ul class="ulist hlist" id="lHist"></ul>
+    </div>
   </section>
 
   <!-- 탭 2: 첫 부스트 찾기 -->
@@ -1254,6 +1263,7 @@ async function loadBrief(id, meta, refresh = false) {
     if ($('#lBrief') !== box) return; // 그사이 다른 링크를 분석했으면 버린다
     if (j.code === 'no_key' || !r.ok) { box.innerHTML = renderBriefFallback(j, r.ok); return; }
     briefRow = j; box.innerHTML = renderBrief(j);
+    if (!j.cached) loadBriefHistory();
   } catch (e) { box.innerHTML = renderBriefFallback({ error: e.message }, false); }
 }
 
@@ -1304,6 +1314,29 @@ function briefText(row) {
   ].filter(x => x != null).join('\n');
 }
 
+// 최근 분석한 영상: video_briefs에서 최근 50개. 제목·채널은 저장하지 않아서 유튜브에서 한 번에 받아 둔다
+const histTitles = {};
+async function loadBriefHistory() {
+  const box = $('#lHist');
+  let rows;
+  try { rows = await sb('video_briefs?select=video_id,created_at,one_line:result->summary->>one_line&order=created_at.desc&limit=50'); }
+  catch (e) { box.innerHTML = `<li class="cmeta">목록을 불러오지 못했어요: ${esc(e.message)}</li>`; return; }
+  $('#lHistCount').textContent = rows.length ? `${rows.length}개` : '';
+  if (!rows.length) { box.innerHTML = '<li class="cmeta">아직 분석한 영상이 없어요. 위에 링크를 넣어 보세요.</li>'; return; }
+  const need = rows.map(r => r.video_id).filter(id => !histTitles[id]);
+  try {
+    for (let i = 0; i < need.length; i += 50) {
+      const j = await yt('videos', { part: 'snippet', id: need.slice(i, i + 50).join(',') });
+      j.items.forEach(v => histTitles[v.id] = { t: v.snippet.title, c: v.snippet.channelTitle });
+    }
+  } catch { /* 제목을 못 받아도 요약으로 목록은 보여 준다 */ }
+  box.innerHTML = rows.map(r => {
+    const id = idOk(r.video_id), m = histTitles[id] || {};
+    return `<li data-hist="${id}"><img loading="lazy" src="${thumb(id)}" alt=""><span><b>${esc(m.t || id)}</b><br>
+      <small>${esc(m.c || '')}${m.c ? ' · ' : ''}${ymd(r.created_at)} 분석</small><div class="hsum">${esc(r.one_line || '')}</div></span></li>`;
+  }).join('');
+}
+
 // ---------- 화면 연결 ----------
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
@@ -1312,6 +1345,7 @@ function showTab(name) {
   if (name === 'saved') renderSaved();
   if (name === 'report') renderReport();
   if (name === 'insights') renderInsights();
+  if (name === 'link') loadBriefHistory();
   store.set('tab', name);
 }
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -1346,6 +1380,12 @@ $('#sGrid').addEventListener('input', e => {
 $('#sGrid').addEventListener('focusout', e => { const t = e.target.closest('[data-note]'); if (t) flushNote(t); });
 $('#btnAnalyze').onclick = runBoost;
 $('#lForm').onsubmit = analyzeLink;
+$('#lHist').onclick = e => {
+  const li = e.target.closest('[data-hist]'); if (!li || !li.dataset.hist) return;
+  $('#lInput').value = `https://www.youtube.com/watch?v=${li.dataset.hist}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  analyzeLink({ preventDefault() {} });
+};
 $('#lResult').onclick = e => {
   const cp = e.target.closest('[data-copybrief]'); if (cp && briefRow) { copyText(briefText(briefRow), cp); return; }
   const rb = e.target.closest('[data-rebrief]'); if (rb) { if (confirm('AI가 영상을 처음부터 다시 봐요. 다시 분석할까요?')) loadBrief(rb.dataset.rebrief, null, true); return; }
