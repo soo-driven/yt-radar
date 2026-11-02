@@ -1260,11 +1260,13 @@ let briefMeta = {}, briefRow = null;
 async function loadBrief(id, meta, refresh = false) {
   const box = $('#lBrief'); if (!box) return;
   briefMeta = meta || briefMeta; briefRow = null;
-  box.innerHTML = `<div class="panel ins"><div class="cmeta">🧠 AI가 영상을 보고 있어요. 처음 보는 영상은 30초~1분쯤 걸려요…</div></div>`;
+  box.innerHTML = `<div class="panel ins"><div class="cmeta">🧠 AI가 영상을 보고 있어요. 처음 보는 영상은 30초~2분쯤 걸려요(25분 넘는 영상은 앞 25분만 봐요)…</div></div>`;
   try {
     const r = await fetch(BRIEF_URL, { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ id, refresh }) });
     const j = await r.json().catch(() => ({}));
     if ($('#lBrief') !== box) return; // 그사이 다른 링크를 분석했으면 버린다
+    // 서버가 150초 한도에 걸려 강제 종료되면(546·504) 이유 없는 빈 응답이 온다
+    if (!r.ok && !j.error && [504, 546].includes(r.status)) j.error = `시간이 너무 오래 걸려 서버가 멈췄어요(${r.status}). 1~2분 뒤에 다시 눌러 주세요.`;
     if (j.code === 'no_key' || !r.ok) { box.innerHTML = renderBriefFallback(j, r.ok); return; }
     briefRow = j; box.innerHTML = renderBrief(j);
     if (!j.cached) loadBriefHistory();
