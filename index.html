@@ -1010,7 +1010,7 @@ function reportCard(it) {
       <div class="ctitle" title="${esc(it.title)}">${esc(it.title)}</div>
       <div class="cmeta">${esc(it.channel)}, ${ago(it.published_at)}</div>
       <div class="cmeta">조회 ${fmt(+it.views)}, 평소 ${fmt(+it.base)}, ${change}</div>
-      ${it.delta != null ? `<div class="cmeta">하루에 <span class="delta">+${fmt(+it.delta)}</span> 늘었어요</div>` : ''}
+      ${it.delta != null ? `<div class="cmeta">하루에 <span class="delta">+${fmt(+it.delta)}</span> 늘었어요${it.rate != null ? ` (평소 영상의 ${it.rate}%)` : ''}</div>` : ''}
       <div class="crow"><span class="left"><span class="score s${tier(+it.score)}">${fmtScore(+it.score)}x</span>${pickBtn(it.id)}</span>
         <button class="linkbtn" data-boost="${esc(it.handle)}">첫 부스트 →</button></div>
     </div></article>`;
@@ -1039,7 +1039,8 @@ function renderReport() {
     <h2>🔥 새로 터진 영상</h2>
     <p class="note" style="margin-top:0">최근 30일 영상 중 오늘 처음 3x를 넘은 영상이에요(어제는 3x 미만이었거나 새로 올라온 영상).</p>
     ${R.new_hits.length ? `<div class="grid">${R.new_hits.map(reportCard).join('')}</div>` : '<div class="panel empty">오늘 새로 터진 영상은 없어요.</div>'}
-    <h2>📈 하루 동안 가장 많이 늘어난 영상</h2>
+    <h2>📈 하루 동안 평소보다 많이 늘어난 영상</h2>
+    <p class="note" style="margin-top:0">하루 증가량을 그 채널 평소 영상 조회수와 견줘 비율이 큰 순서예요(하루 +300 이상, 채널당 최대 2개). 큰 채널만 올라오지 않게 11/3에 바꿨어요.</p>
     ${R.top_delta.length ? `<div class="grid">${R.top_delta.map(reportCard).join('')}</div>` : '<div class="panel empty">하루 증가량은 기록이 이틀 이상 쌓이면 보여요.</div>'}
     <h2>🆕 새 업로드 ${R.new_uploads.length}개</h2>
     <div class="panel">${R.new_uploads.length ? `<ul class="ulist">${R.new_uploads.map(it => `<li><img loading="lazy" src="${thumb(idOk(it.id))}" alt="">
@@ -1053,7 +1054,7 @@ function reportText() {
   const line = (it, i, tail) => `${i + 1}. ${it.title} (${it.channel}) ${tail}`;
   return [`[터진영상 레이더] ${day} 리포트`,
     `새로 터진 영상 ${R.new_hits.length}개`, ...R.new_hits.slice(0, 5).map((it, i) => line(it, i, `${it.score}x, 조회 ${fmt(+it.views)}`)),
-    '', '하루 증가량 상위 5', ...R.top_delta.slice(0, 5).map((it, i) => line(it, i, `+${fmt(+it.delta)}`)),
+    '', '평소 대비 하루 증가 상위 5', ...R.top_delta.slice(0, 5).map((it, i) => line(it, i, `+${fmt(+it.delta)}${it.rate != null ? `, 평소의 ${it.rate}%` : ''}`)),
     '', `새 업로드 ${R.new_uploads.length}개, 최근 30일 터진 영상 ${R.hits_30d}개`,
     `👉 ${location.origin.startsWith('http') && !/localhost|127\.0\.0\.1/.test(location.host) ? location.origin + location.pathname : 'https://soo-driven.github.io/yt-radar/'}`].join('\n');
 }
